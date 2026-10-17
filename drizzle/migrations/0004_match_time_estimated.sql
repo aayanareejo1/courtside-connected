@@ -1,0 +1,1 @@
+ALTER TABLE public.matches ADD COLUMN time_estimated boolean NOT NULL DEFAULT false;

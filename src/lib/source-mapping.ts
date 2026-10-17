@@ -1,0 +1,144 @@
+// Pure source-to-canonical mapping. No network or database access here so it can be tested.
+import { torontoTimestamp } from "@/lib/admin-rules";
+
+export type MatchStatus = "scheduled" | "live" | "final" | "cancelled";
+export type CanonicalMatch = {
+  external_id: string;
+  division: string;
+  pool: string | null;
+  date: string; // venue date YYYY-MM-DD
+  start_at: string; // ISO
+  court_label: string;
+  home: string;
+  away: string;
+  status: MatchStatus;
+  time_estimated?: boolean;
+  result: { home_sets: number; away_sets: number; set_scores: number[][] } | null;
+};
+export type RosterTeam = { team: string; players: { display_name: string; jersey_number: number }[]; staff: { display_name: string; role: string }[] };
+
+// Minors: only first name + last initial ever leaves the adapter.
+export const privateName = (first: string, last: string) => {
+  const f = first.trim();
+  const l = last.trim();
+  if (!f) throw new Error("Missing first name");
+  return l ? `${f} ${l[0]!.toUpperCase()}.` : f;
+};
+
+// ---------- TIMU (shape of timu.ca results.php: pool, match no, court, time, teams, set scores) ----------
+export type TimuGame = { match_no: string; division: string; pool: string; date: string; time: string; court: string; home: string; away: string; status: string; sets: [number, number][]; time_estimated?: boolean };
+const STATUS: Record<string, MatchStatus> = { scheduled: "scheduled", upcoming: "scheduled", live: "live", "in progress": "live", final: "final", complete: "final", cancelled: "cancelled" };
+
+export function mapTimu(payload: { games: TimuGame[] }): CanonicalMatch[] {
+  if (!Array.isArray(payload?.games)) throw new Error("TIMU payload has no games");
+  return payload.games.map((g) => {
+    const status = STATUS[String(g.status).toLowerCase()];
+    if (!status) throw new Error(`Unknown TIMU status "${g.status}" for ${g.match_no}`);
+    if (!g.match_no || !g.home || !g.away || !/^\d{4}-\d{2}-\d{2}$/.test(g.date) || !/^\d{2}:\d{2}$/.test(g.time)) throw new Error(`Incomplete TIMU game ${g.match_no ?? "?"}`);
+    const sets = (g.sets ?? []).filter((s) => s.length === 2);
+    const home_sets = sets.filter(([h, a]) => h > a).length;
+    return {
+      external_id: g.match_no,
+      division: g.division,
+      pool: g.pool || null,
+      date: g.date,
+      start_at: torontoTimestamp(`${g.date}T${g.time}`)!,
+      court_label: String(g.court).replace(/^court\s*/i, "").trim(),
+      home: g.home,
+      away: g.away,
+      status,
+      time_estimated: g.time_estimated === true,
+      result: sets.length ? { home_sets, away_sets: sets.length - home_sets, set_scores: sets } : null,
+    };
+  });
+}
+
+// ---------- Speer roster CSV (sample roster format) ----------
+const COLUMNS = ["jersey_number", "first_name", "last_name", "club", "team", "age_category", "home_city", "role"] as const;
+
+function splitCsvLine(line: string): string[] {
+  const out: string[] = [];
+  let cur = "";
+  let quoted = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i]!;
+    if (quoted) {
+      if (c === '"' && line[i + 1] === '"') { cur += '"'; i++; }
+      else if (c === '"') quoted = false;
+      else cur += c;
+    } else if (c === '"') quoted = true;
+    else if (c === ",") { out.push(cur); cur = ""; }
+    else cur += c;
+  }
+  out.push(cur);
+  return out.map((s) => s.trim());
+}
+
+export function parseRosterCsv(csv: string): RosterTeam[] {
+  const lines = csv.split(/\r?\n/).filter((l) => l.trim());
+  const header = splitCsvLine(lines.shift() ?? "").map((h) => h.toLowerCase());
+  for (const col of COLUMNS) if (!header.includes(col)) throw new Error(`Roster CSV missing column "${col}"`);
+  const teams = new Map<string, RosterTeam>();
+  lines.forEach((line, i) => {
+    const cells = splitCsvLine(line);
+    const get = (c: (typeof COLUMNS)[number]) => cells[header.indexOf(c)] ?? "";
+    const team = get("team");
+    if (!team) throw new Error(`Row ${i + 2}: missing team`);
+    const entry = teams.get(team) ?? { team, players: [], staff: [] };
+    const role = get("role").toLowerCase();
+    const name = privateName(get("first_name"), get("last_name"));
+    if (role === "player") {
+      const jersey = Number(get("jersey_number"));
+      if (!Number.isInteger(jersey) || jersey < 0 || jersey > 99) throw new Error(`Row ${i + 2}: invalid jersey number`);
+      if (entry.players.some((p) => p.jersey_number === jersey)) throw new Error(`Row ${i + 2}: duplicate jersey ${jersey}`);
+      entry.players.push({ display_name: name, jersey_number: jersey });
+    } else if (role === "head coach" || role === "assistant coach") {
+      entry.staff.push({ display_name: `Coach ${name}`, role: role === "head coach" ? "Head Coach" : "Assistant Coach" });
+    } else throw new Error(`Row ${i + 2}: unknown role "${get("role")}"`);
+    teams.set(team, entry);
+  });
+  return [...teams.values()];
+}
+
+// ---------- Live TIMU results.php HTML (no JSON feed; server-rendered divs) ----------
+// The page lists pool, court and set scores per match but no per-match time, so times are
+// estimated from the tournament start: each repeat of a court starts a new round.
+export type TimuParseOptions = { division: string; slotMinutes?: number; courtMap?: Record<string, string> | undefined; teamAliases?: Record<string, string> | undefined };
+const strip = (s: string) => s.replace(/<!--[\s\S]*?-->/g, "").replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").trim();
+
+export function parseTimuHtml(html: string, opts: TimuParseOptions): { games: TimuGame[] } {
+  const date = html.match(/name='tdate' value='(\d{4}-\d{2}-\d{2})'/)?.[1] ?? html.match(/(\w+ \d{1,2}, \d{4})<br>/)?.[1];
+  const iso = date && /^\d{4}/.test(date) ? date : date ? new Date(`${date} 12:00`).toISOString().slice(0, 10) : null;
+  const start = html.match(/Start time:\s*(\d{1,2}):(\d{2})\s*(am|pm)/i);
+  if (!iso || !start) throw new Error("TIMU page has no date or start time");
+  const startMin = ((Number(start[1]) % 12) + (start[3]!.toLowerCase() === "pm" ? 12 : 0)) * 60 + Number(start[2]);
+  const blocks = html.split(/<div id='(\d+)' class='wrapper'/).slice(1);
+  const games: TimuGame[] = [];
+  const seenCourts = new Set<string>();
+  let round = 0;
+  for (let i = 0; i < blocks.length; i += 2) {
+    const id = blocks[i]!, b = blocks[i + 1]!;
+    const pool = b.match(/>(Pool [A-Z0-9]+)/)?.[1] ?? "";
+    const rawCourt = b.match(/Court:\s*([\w-]+)/)?.[1];
+    const teams = [...b.matchAll(/class='away[^']*'[^>]*>([\s\S]*?)<\/div>/g)].map((m) => strip(m[1]!));
+    const boxes = [...b.matchAll(/class='(?:home|away)-box[^']*'>([\s\S]*?)(?=<div class='(?:home|away)-box|$)/g)].map((m) =>
+      [...m[1]!.replace(/<!--[\s\S]*?-->/g, "").matchAll(/class='set-block'[^>]*>([^<]*)</g)].map((x) => x[1]!.trim()));
+    if (!rawCourt || teams.length < 2 || boxes.length < 2) continue;
+    if (seenCourts.has(rawCourt)) { round++; seenCourts.clear(); }
+    seenCourts.add(rawCourt);
+    const [h, a] = boxes as [string[], string[]];
+    const sets: [number, number][] = [];
+    for (let s = 1; s < Math.min(h.length, a.length); s++) if (h[s] !== "" && a[s] !== "") sets.push([Number(h[s]), Number(a[s])]);
+    const decided = sets.filter(([x, y]) => x > y).length >= 2 || sets.filter(([x, y]) => y > x).length >= 2;
+    const m = startMin + round * (opts.slotMinutes ?? 60);
+    games.push({
+      match_no: `timu-${id}`, division: opts.division, pool, date: iso,
+      time: `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`,
+      court: opts.courtMap?.[rawCourt] ?? rawCourt,
+      home: opts.teamAliases?.[teams[0]!] ?? teams[0]!, away: opts.teamAliases?.[teams[1]!] ?? teams[1]!,
+      status: decided ? "final" : sets.length ? "live" : "scheduled", sets, time_estimated: true,
+    });
+  }
+  if (!games.length) throw new Error("TIMU page had no matches");
+  return { games };
+}

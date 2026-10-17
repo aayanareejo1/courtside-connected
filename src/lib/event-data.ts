@@ -1,0 +1,37 @@
+import { queryOptions } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { withDeviceCache } from "@/lib/offline-cache";
+
+async function loadEventData() {
+    const { data: event, error } = await supabase.from("events").select("id,name,venue_id,warmup_min,walk_min").eq("published", true).limit(1).single();
+    if (error) throw error;
+    if (!event.venue_id) throw new Error("Published event has no venue");
+    const [teams, players, clubs, courts, matches] = await Promise.all([
+      supabase.from("teams").select("id,name,club_id,division_id,divisions!inner(name,event_id)").eq("divisions.event_id", event.id).order("name").limit(2000),
+      supabase.from("players").select("id,display_name,jersey_number,team_id,teams!inner(division_id,divisions!inner(event_id))").eq("teams.divisions.event_id", event.id).order("display_name").limit(20000),
+      supabase.from("clubs").select("id,name,city").order("name"),
+      supabase.from("courts").select("id,label,area_id,areas(name)").eq("venue_id", event.venue_id).order("number"),
+      supabase.from("matches").select("id,start_at,status,court_id,court_label_raw,home_team_id,away_team_id,est_duration_min,time_estimated,event_days!inner(event_id,label),results(home_sets,away_sets)").eq("event_days.event_id", event.id).order("start_at").limit(20000),
+    ]);
+    for (const result of [teams, players, clubs, courts, matches]) if (result.error) throw result.error;
+    const eventTeams = teams.data ?? [];
+    return { event, teams: eventTeams, players: players.data ?? [], clubs: (clubs.data ?? []).filter((c) => eventTeams.some((team) => team.club_id === c.id)), courts: courts.data ?? [], matches: matches.data ?? [] };
+}
+
+export type EventData = Awaited<ReturnType<typeof loadEventData>> & { offlineSavedAt: number | null };
+export const eventDataQuery = queryOptions({
+  queryKey: ["event-directory"],
+  staleTime: 30_000,
+  refetchInterval: (q) => (q.state.data?.matches.some((m) => m.status === "live") ? 15_000 : 30_000),
+  queryFn: (): Promise<EventData> => typeof window === "undefined" ? loadEventData().then((d) => ({ ...d, offlineSavedAt: null })) : withDeviceCache(loadEventData, window.localStorage),
+  retry: 1,
+});
+
+export const teamStaffQuery = (teamId: string) => queryOptions({
+  queryKey: ["team-staff", teamId],
+  queryFn: async () => {
+    const { data, error } = await supabase.from("staff_members").select("id,display_name,role").eq("team_id", teamId);
+    if (error) throw error;
+    return data ?? [];
+  },
+});

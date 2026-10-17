@@ -1,0 +1,2 @@
+ALTER TABLE public.announcements ADD COLUMN IF NOT EXISTS division_id uuid REFERENCES public.divisions(id) ON DELETE SET NULL;
+ALTER TABLE public.announcements ADD COLUMN IF NOT EXISTS area_id uuid REFERENCES public.areas(id) ON DELETE SET NULL;
