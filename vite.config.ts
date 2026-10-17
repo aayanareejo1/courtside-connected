@@ -29,7 +29,7 @@ export default defineConfig(({ command, mode }) => {
         server: { entry: "server" },
       }),
       // Cloudflare Workers output; override with NITRO_PRESET for another host.
-      ...(command === "build" ? [nitro({ preset: process.env.NITRO_PRESET || "cloudflare-module", cloudflare: { nodeCompat: true, deployConfig: true, wrangler: { name: "courtside-connected" } } })] : []),
+      ...(command === "build" ? [nitro({ preset: process.env.NITRO_PRESET || "cloudflare-module", cloudflare: { nodeCompat: true, deployConfig: true, wrangler: { name: "courtside-connected", observability: { logs: { enabled: true } } } } })] : []),
       viteReact(),
     ],
   };
