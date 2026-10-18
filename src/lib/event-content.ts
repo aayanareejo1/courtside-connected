@@ -11,7 +11,7 @@ async function loadEventContent() {
   const [info, slots, announcements] = await Promise.all([
     supabase.from("info_links").select("id,category,title,url,description,sort").eq("event_id", event.id).eq("published", true).order("sort"),
     supabase.from("sponsor_slots").select("id,placement,headline,offer_text,court_id,sponsors(id,name,logo_path,url),courts(id,label)").eq("event_id", event.id).eq("published", true).order("id"),
-    supabase.from("announcements").select("id,title,body,severity,starts_at,ends_at,published,division_id,area_id").eq("event_id", event.id).eq("published", true).order("created_at"),
+    supabase.from("announcements").select("id,title,body,severity,starts_at,ends_at,published,division_id,area_id,created_at").eq("event_id", event.id).eq("published", true).order("created_at"),
   ]);
   for (const result of [info, slots, announcements]) if (result.error) throw result.error;
   // Save published rows before time filtering so future announcements can become active offline.
