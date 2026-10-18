@@ -11,7 +11,7 @@ export function AppShell({ children }: { children: ReactNode }) {
  return <div className="mx-auto flex min-h-dvh max-w-xl flex-col">
   <a href="#main" className="sr-only focus:not-sr-only focus:p-3">Skip to content</a>
   <header className="relative z-20 flex items-center justify-between bg-ink px-4 py-3 text-ink-foreground">
-   <Link to="/" className="tap inline-flex flex-wrap items-center font-display text-xl font-bold uppercase">Courtside <span className="text-accent">Connected</span></Link>
+   <Link to="/" className="tap inline-flex flex-wrap items-center font-display text-xl font-bold uppercase">Courtside <span className="text-accent-foreground">Connected</span></Link>
   </header>
   <ConnectionBanner />
   <main tabIndex={-1} id="main" className="flex-1 px-4 pb-6 pt-4">{children}</main>
