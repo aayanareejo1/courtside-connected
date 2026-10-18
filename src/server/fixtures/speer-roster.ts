@@ -12,6 +12,7 @@ export const speerRosterCsv = `jersey_number,first_name,last_name,club,team,age_
 14,Ella,Jansen,Lakeshore Storm,Lakeshore Storm 13U,13U,Brampton,Player
 15,Grace,Kowalski,Lakeshore Storm,Lakeshore Storm 13U,13U,Mississauga,Player
 16,Aayan,Areejo,Lakeshore Storm,Lakeshore Storm 13U,13U,Toronto,Player
+17,Alyssa,M,Lakeshore Storm,Lakeshore Storm 13U,13U,Toronto,Player
 ,Tom,Whitfield,Lakeshore Storm,Lakeshore Storm 13U,13U,Mississauga,Head Coach
 ,Marc,Kerr,Lakeshore Storm,Lakeshore Storm 13U,13U,Oakville,Assistant Coach
 `;
