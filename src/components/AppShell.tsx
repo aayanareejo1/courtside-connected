@@ -1,3 +1,4 @@
+import logo from "@/assets/ontario-volleyball-logo.png.asset.json";
 import { DemoBanner } from "@/components/DemoBanner";
 import { Link } from "@tanstack/react-router";
 import { Home, Search, Star, Info, Gift } from "lucide-react";
@@ -10,19 +11,20 @@ const items = [
  { to: "/following", label: t.nav.following, Icon: Star }, { to: "/info", label: t.nav.info, Icon: Info }, { to: "/sponsors", label: t.nav.sponsors, Icon: Gift },
 ] as const;
 export function AppShell({ children }: { children: ReactNode }) {
- return <div className="mx-auto flex min-h-dvh max-w-xl flex-col">
+ return <div className="mx-auto flex min-h-dvh max-w-5xl flex-col">
   <DemoBanner />
   <a href="#main" className="sr-only focus:not-sr-only focus:p-3">Skip to content</a>
-  <header className="relative z-20 flex items-center justify-between bg-ink px-4 py-3 text-ink-foreground">
-   <Link to="/" className="tap inline-flex flex-wrap items-center font-display text-xl font-bold uppercase">Courtside <span className="text-accent-foreground">Connected</span></Link>
+  <header className="app-header relative z-20 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-b px-5 py-4 text-foreground sm:px-8">
+   <Link to="/" aria-label="Courtside Connected home" className="tap inline-flex min-w-0 flex-col justify-center font-display font-bold uppercase leading-none"><span className="text-3xl sm:text-4xl">Courtside</span><span className="mt-1 text-sm font-sans font-medium text-primary">Connected</span></Link>
+   <img src={`https://id-preview--173c3263-2310-4ef2-b73e-a59f372c8b00.lovable.app${logo.url}`} alt="Ontario Volleyball" className="h-16 w-12 shrink-0 object-contain sm:h-20 sm:w-16" />
   </header>
   <ConnectionBanner />
-  <main tabIndex={-1} id="main" className="flex-1 px-4 pb-6 pt-4">{children}</main>
-  <footer className="space-y-2 px-4 pb-40 text-sm text-muted-foreground"><p>{t.privacy.note}</p><p><Link to="/staff" className="tap inline-flex items-center underline">{t.admin.brandLink}</Link></p></footer>
+  <main tabIndex={-1} id="main" className="app-main flex-1 px-5 pb-8 pt-6 sm:px-8 sm:pt-8">{children}</main>
+  <footer className="space-y-2 border-t px-5 pt-5 pb-40 sm:px-8 text-sm text-muted-foreground"><p>{t.privacy.note}</p><p><Link to="/staff" className="tap inline-flex items-center underline">{t.admin.brandLink}</Link></p></footer>
   <AskWidget />
-  <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-20 border-t bg-card">
-   <ul className="mx-auto grid max-w-xl grid-cols-5">{items.map(({ to,label,Icon }) => <li key={to}>
-    <Link to={to} activeOptions={{ exact: to === "/" }} className="tap flex flex-col items-center justify-center gap-0.5 break-words py-2 text-xs font-medium text-muted-foreground data-[status=active]:text-primary"><Icon className="h-6 w-6 shrink-0" aria-hidden /><span className="w-full min-w-0 break-words text-center">{label}</span></Link>
+  <nav aria-label="Main" className="main-nav fixed inset-x-0 bottom-0 z-20 border-t bg-card">
+   <ul className="mx-auto grid max-w-5xl grid-cols-5">{items.map(({ to,label,Icon }) => <li key={to}>
+    <Link to={to} activeOptions={{ exact: to === "/" }} className="tap flex flex-col items-center justify-center gap-1 break-words px-1 py-2 text-xs font-medium text-muted-foreground data-[status=active]:text-primary"><Icon className="h-6 w-6 shrink-0" aria-hidden /><span className="w-full min-w-0 break-words text-center">{label}</span></Link>
    </li>)}</ul>
   </nav>
  </div>;

@@ -52,3 +52,10 @@
 - Knowledge: live event data (matches, teams, players, courts, announcements, sponsor slots), published info links (staff editable) and the case study links in `src/lib/ask-knowledge.ts`, each with what it is for. The private roster sheet and the Catalyst app are deliberately excluded.
 - Safety: only URLs from its LINKS list can appear in an answer, answers say when data is sample or a snapshot, names stay first name and last initial, questions are capped at 300 characters and rate limited.
 - Tickets: no vendor link has been supplied. Run `supabase/ask-links.sql` for a placeholder, then put the vendor URL (with `{qty}`) in the tickets info link.
+
+## Dark redesign
+- [x] Preserve content and flows while applying dark semantic colors, supplied Ontario Volleyball logo, consistent controls and reduced-motion-aware animation.
+- [x] Existing tests: 204 passed; production build passed.
+- [x] Verified real-event Home, Search, team follow, populated calendar and ICS export, court pin, Info, Sponsors and Ask panel at 375px and desktop. No horizontal overflow.
+- [ ] Deliver and merge the redesign.
+- Existing issue observed during review: returning Home after a reload can report a source-badge hydration mismatch between saved snapshot and sample labels; data-cache logic was not changed by this visual redesign.

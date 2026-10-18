@@ -21,6 +21,6 @@ export function DemoBanner() {
   return <div role="status" className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 bg-accent px-3 py-1.5 text-center text-sm font-semibold text-accent-foreground">
     <span>{DEMO_BANNER_TEXT}</span>
     {/* Plain link so the page reloads and the clock re-reads the address. */}
-    <a href={exitDemoHref(location.pathname, search)} className="inline-flex min-h-8 items-center underline underline-offset-4">Exit demo</a>
+    <a href={exitDemoHref(location.pathname, search)} className="inline-flex min-h-11 items-center underline underline-offset-4">Exit demo</a>
   </div>;
 }
