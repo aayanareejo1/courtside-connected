@@ -30,6 +30,14 @@ describe("Ask Courtside agent", () => {
     expect(runTool("get_profile", { player_id: "nope" }, { ...ctx, links: new Map() })).toBe("Unknown player or team.");
     expect(runTool("get_matches", { day: "today", team_id: "T1" }, { ...ctx, links: new Map() })).toContain("Court 5, Hall 1");
     expect(runTool("get_matches", { day: "tomorrow", team_id: "T1" }, { ...ctx, links: new Map() })).toContain("Apr 20");
+    const mine = runTool("get_followed_schedule", {}, { ...ctx, follows: [{ type: "player", id: "p1" }], links: new Map() });
+    expect(mine).toContain("NEXT MATCH:");
+    expect(mine).toContain("Court 5, Hall 1");
+    const late = runTool("get_followed_schedule", {}, { ...ctx, follows: [{ type: "team", id: "T1" }], now: Date.parse("2026-10-18T16:00:00Z"), links: new Map() });
+    expect(late).toContain("No unfinished match is after NOW");
+    expect(late).toContain("Apr 20");
+    expect(runTool("get_followed_schedule", {}, { ...ctx, links: new Map() })).toContain("Nothing is followed");
+    expect(runTool("get_matches", { day: "all" }, { ...ctx, now: Date.parse("2026-10-18T16:00:00Z"), links: new Map() })).toContain("Event matches run from");
     expect(runTool("wipe_everything", {}, { ...ctx, links: new Map() })).toBe("Unknown tool.");
   });
   it("asks who the child is, then looks the name up and summarises", async () => {

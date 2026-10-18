@@ -8,6 +8,7 @@ import { t } from "@/lib/i18n";
 
 export const TOOL_DEFS = [
   { name: "get_followed", description: "The players and teams this fan follows on this device. Call first when the fan says 'my son', 'my team' or 'my game' without a name.", input_schema: { type: "object", properties: {}, additionalProperties: false } },
+  { name: "get_followed_schedule", description: "The combined schedule of everything this fan follows, with the next match first, courts, halls, arrival times, clashes and results. Use for 'where is my next match', 'when do I play', 'my schedule'.", input_schema: { type: "object", properties: {}, additionalProperties: false } },
   { name: "find_players", description: "Find players by first name, optionally with last initial, for example 'Aayan' or 'Aayan A'. Returns player_id, team_id, team and division.", input_schema: { type: "object", properties: { name: { type: "string" } }, required: ["name"], additionalProperties: false } },
   { name: "get_profile", description: "Full summary of one player's team or one team: division, club, coaches, record and every match with court, hall, result or arrival time. Give player_id or team_id.", input_schema: { type: "object", properties: { player_id: { type: "string" }, team_id: { type: "string" } }, additionalProperties: false } },
   { name: "get_matches", description: "Matches for a day, for the whole event or one team. day is today, tomorrow or all. team_id is optional.", input_schema: { type: "object", properties: { day: { type: "string", enum: ["today", "tomorrow", "all"] }, team_id: { type: "string" } }, required: ["day"], additionalProperties: false } },
@@ -32,6 +33,13 @@ export function runTool(name: string, input: unknown, ctx: ToolContext): string 
       });
       return rows.join("\n") || "Nothing is followed on this device.";
     }
+    case "get_followed_schedule": {
+      const teamIds = [...new Set(follows.flatMap((f) => (f.type === "team" ? [f.id] : data.players.filter((p) => p.id === f.id).map((p) => p.team_id))))];
+      if (!teamIds.length) return "Nothing is followed on this device. Ask the fan for a player's first name and last initial or a team name.";
+      const f = facts({ playerIds: [], teamIds });
+      const next = f.nextLines[0];
+      return [`NOW: ${eventDateLabel(new Date(now).toISOString())} ${eventTime(new Date(now))}`, next ? `NEXT MATCH: ${next}` : "No unfinished match is after NOW. The lines below are all of their matches.", `ALL MATCHES:\n${f.matchLines.join("\n") || "none"}`].join("\n");
+    }
     case "find_players": {
       const found = matchPlayers(str(args["name"]), data.players);
       return found.length ? found.map((p) => `${p.display_name}${p.jersey_number != null ? ` #${p.jersey_number}` : ""} | player_id ${p.id} | team_id ${p.team_id} | team ${team(p.team_id)?.name ?? "unknown"} | division ${team(p.team_id)?.divisions?.name ?? "unknown"}`).join("\n") : "No player with that name.";
@@ -50,7 +58,9 @@ export function runTool(name: string, input: unknown, ctx: ToolContext): string 
       const tid = str(args["team_id"]);
       const f = facts({ playerIds: [], teamIds: team(tid) ? [tid] : [], day }, "games");
       const lines = day ? f.dayLines : tid ? f.matchLines : f.nextLines;
-      return (lines.slice(0, 20).join("\n") || (day ? `No matches ${day}.` : "No matches found.")) + `\n(be at the court by is 15 minutes before start; NOW is ${eventDateLabel(new Date(now).toISOString())} ${eventTime(new Date(now))})`;
+      const dates = data.matches.map((m) => Date.parse(m.start_at)).sort((a, b) => a - b);
+      const span = dates.length ? ` Event matches run from ${eventDateLabel(new Date(dates[0]!).toISOString())} to ${eventDateLabel(new Date(dates.at(-1)!).toISOString())}.` : "";
+      return (lines.slice(0, 20).join("\n") || (day ? `No matches ${day}.${span}` : `No upcoming matches after NOW.${span}`)) + `\n(be at the court by is 15 minutes before start; NOW is ${eventDateLabel(new Date(now).toISOString())} ${eventTime(new Date(now))})`;
     }
     case "get_links": {
       const qty = typeof args["quantity"] === "number" ? Math.round(args["quantity"]) : null;
