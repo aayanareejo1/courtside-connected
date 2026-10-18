@@ -23,7 +23,7 @@ function HomeMap() {
     <>
       <section aria-labelledby="map-title">
         <h2 id="map-title" className="text-2xl font-bold uppercase">{t.map.title}</h2>
-        <VenueMap areas={data.areas} courts={data.courts} width={data.venue.plan_width} height={data.venue.plan_height} sponsorPins={pins} />
+        <VenueMap areas={data.areas} courts={data.courts} width={data.venue.plan_width} height={data.venue.plan_height} floorPlan={data.venue.floor_plan_path} sponsorPins={pins} />
         {pins.length > 0 && <ul className="mt-2 space-y-1">{pins.map((slot) => <li key={slot.id}><Link to="/sponsors" hash={`slot-${slot.id}`} className="tap flex items-center gap-2 text-sm text-primary"><Gift className="h-4 w-4 text-accent-foreground" aria-hidden />{slot.headline ?? slot.sponsors?.name}</Link></li>)}</ul>}
       </section>
       <MapTextList areas={data.areas} courts={data.courts} />
