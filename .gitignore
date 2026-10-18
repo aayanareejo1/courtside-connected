@@ -32,6 +32,3 @@ dist-ssr
 *.sw?
 
 # Local secrets
-.env
-.env.*
-!.env.example

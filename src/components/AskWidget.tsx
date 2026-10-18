@@ -6,6 +6,7 @@ import { MessageCircle, X } from "lucide-react";
 import { AskCourtside } from "@/components/AskCourtside";
 import { AssistantMark } from "@/components/AssistantMark";
 import { VoiceCall, useVoiceAvailable } from "@/components/VoiceCall";
+import type { AskTurn } from "@/lib/ask-courtside";
 
 const EVENT = "courtside:ask";
 // Anything in the app can open the chat, optionally with a question: openAsk("Where is court 9?").
@@ -14,6 +15,8 @@ export const openAsk = (q = "") => window.dispatchEvent(new CustomEvent(EVENT, {
 export function AskWidget() {
   const [mounted, setMounted] = useState(false);
   const voice = useVoiceAvailable();
+  const [calling, setCalling] = useState(false);
+  const [history, setHistory] = useState<AskTurn[]>([]);
   const [open, setOpen] = useState(false);
   const [trigger, setTrigger] = useState<{ q: string; n: number } | undefined>();
   const panel = useRef<HTMLDivElement>(null);
@@ -40,17 +43,17 @@ export function AskWidget() {
 
   return <>
     {mounted && createPortal(<div ref={panel} id="ask-panel" role="dialog" aria-label="Ask OVAchamps" hidden={!open}
-      className="fixed bottom-20 right-2 top-20 z-40 flex w-[calc(100vw-1rem)] flex-col overflow-hidden rounded-lg border bg-card shadow-xl sm:bottom-24 sm:right-5 sm:top-auto sm:h-[min(76dvh,44rem)] sm:w-[26rem]">
+      className="fixed bottom-36 right-2 top-4 z-40 flex w-[calc(100vw-1rem)] flex-col overflow-hidden rounded-lg border bg-card shadow-xl sm:bottom-40 sm:right-5 sm:top-auto sm:h-[min(76dvh,44rem)] sm:w-[26rem]">
       <div className="grid shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b px-4 py-3">
         <div className="flex min-w-0 items-center gap-3"><AssistantMark small /><div className="min-w-0"><h2 className="truncate text-base font-semibold">Ask OVAchamps</h2><p className="text-xs text-muted-foreground">Your event companion</p></div></div>
         <Button type="button" variant="ghost" size="icon" onClick={() => { setOpen(false); button.current?.focus(); }} aria-label="Close Ask OVAchamps" className="h-11 w-11 shrink-0"><X className="h-5 w-5" aria-hidden /></Button>
       </div>
-      {voice && open && <VoiceCall />}
-      <AskCourtside trigger={trigger} />
+      {calling && open && <VoiceCall history={history} onEnd={() => setCalling(false)} />}
+      <div className={calling ? "hidden" : "flex min-h-0 flex-1 flex-col"}><AskCourtside trigger={trigger} onHistory={setHistory} onVoice={voice ? () => setCalling(true) : undefined} /></div>
     </div>, document.body)}
     <Button ref={button} type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-controls="ask-panel"
-      className="tap inline-flex h-11 items-center gap-2 rounded-lg bg-primary px-3 font-semibold text-primary-foreground shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-      {open ? <X className="h-6 w-6" aria-hidden /> : <MessageCircle className="h-6 w-6" aria-hidden />}<span>{open ? "Close" : "Ask"}</span>
+      className="tap fixed bottom-24 right-3 z-30 inline-flex h-12 rounded-full sm:right-5 items-center gap-2 bg-primary px-4 font-semibold text-primary-foreground shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+      {open ? <X className="h-6 w-6" aria-hidden /> : <MessageCircle className="h-6 w-6" aria-hidden />}<span>{open ? "Close" : "Ask me"}</span>
     </Button>
   </>;
 }

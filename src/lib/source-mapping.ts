@@ -15,7 +15,7 @@ export type CanonicalMatch = {
   time_estimated?: boolean;
   result: { home_sets: number; away_sets: number; set_scores: number[][] } | null;
 };
-export type RosterTeam = { team: string; players: { display_name: string; jersey_number: number }[]; staff: { display_name: string; role: string }[] };
+export type RosterTeam = { team: string; players: { display_name: string; jersey_number: number | null }[]; staff: { display_name: string; role: string }[] };
 
 // Minors: only first name + last initial ever leaves the adapter.
 export const privateName = (first: string, last: string) => {
@@ -88,9 +88,10 @@ export function parseRosterCsv(csv: string): RosterTeam[] {
     const role = get("role").toLowerCase();
     const name = privateName(get("first_name"), get("last_name"));
     if (role === "player") {
-      const jersey = Number(get("jersey_number"));
-      if (!Number.isInteger(jersey) || jersey < 0 || jersey > 99) throw new Error(`Row ${i + 2}: invalid jersey number`);
-      if (entry.players.some((p) => p.jersey_number === jersey)) throw new Error(`Row ${i + 2}: duplicate jersey ${jersey}`);
+      const rawJersey = get("jersey_number").trim();
+      const jersey = rawJersey ? Number(rawJersey) : null;
+      if (jersey !== null && (!Number.isInteger(jersey) || jersey < 0 || jersey > 99)) throw new Error(`Row ${i + 2}: invalid jersey number`);
+      if (jersey !== null && entry.players.some((p) => p.jersey_number === jersey)) throw new Error(`Row ${i + 2}: duplicate jersey ${jersey}`);
       entry.players.push({ display_name: name, jersey_number: jersey });
     } else if (role === "head coach" || role === "assistant coach") {
       entry.staff.push({ display_name: `Coach ${name}`, role: role === "head coach" ? "Head Coach" : "Assistant Coach" });

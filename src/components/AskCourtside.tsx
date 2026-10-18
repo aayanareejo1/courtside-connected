@@ -1,7 +1,7 @@
 // Ask OVAchamps chat. Questions go only to POST /api/public/ask and live in component state for this visit.
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
-import { ArrowUpRight, ExternalLink, Send } from "lucide-react";
-import { ASK_INTRO, ASK_SUGGESTIONS, MAX_HISTORY, MAX_QUESTION } from "@/lib/ask-courtside";
+import { ArrowUpRight, AudioLines, ExternalLink, Send } from "lucide-react";
+import { ASK_INTRO, ASK_SUGGESTIONS, MAX_HISTORY, MAX_QUESTION, type AskTurn } from "@/lib/ask-courtside";
 import { useFollows } from "@/lib/follows";
 import { appNow } from "@/lib/clock";
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,7 @@ export function renderAnswer(text: string): ReactNode[] {
   return out;
 }
 
-export function AskCourtside({ initialQuestion, trigger }: { initialQuestion?: string | undefined; trigger?: { q: string; n: number } | undefined }) {
+export function AskCourtside({ initialQuestion, trigger, onVoice, onHistory }: { initialQuestion?: string | undefined; trigger?: { q: string; n: number } | undefined; onVoice?: (() => void) | undefined; onHistory?: ((history: AskTurn[]) => void) | undefined }) {
   const { follows } = useFollows();
   const [text, setText] = useState("");
   const [items, setItems] = useState<Exchange[]>([]);
@@ -48,6 +48,7 @@ export function AskCourtside({ initialQuestion, trigger }: { initialQuestion?: s
   const latest = useRef<HTMLLIElement>(null);
 
   useEffect(() => { latest.current?.scrollIntoView?.({ behavior: "instant", block: "nearest" }); }, [items]);
+  useEffect(() => { onHistory?.(items.flatMap((item) => typeof item.answer === "string" ? [{ question: item.question, answer: item.answer }] : []).slice(-MAX_HISTORY)); }, [items, onHistory]);
 
   async function ask(raw: string) {
     const question = raw.trim().slice(0, MAX_QUESTION);
@@ -92,6 +93,7 @@ export function AskCourtside({ initialQuestion, trigger }: { initialQuestion?: s
         <textarea id="ask-input" value={text} maxLength={MAX_QUESTION} rows={2} onChange={(e) => setText(e.target.value.slice(0, MAX_QUESTION))}
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void ask(text); } }}
           aria-describedby="ask-count" className="min-h-12 min-w-0 flex-1 resize-none bg-transparent px-1 py-2 text-base focus-visible:outline-none" placeholder="What can I help you find?" />
+        {onVoice && <Button type="button" variant="ghost" size="icon" className="h-11 w-11 shrink-0" onClick={onVoice} aria-label="Talk with voice"><AudioLines className="h-5 w-5" aria-hidden /></Button>}
         <Button type="submit" size="icon" className="h-11 w-11 shrink-0" disabled={busy || !text.trim()} aria-label="Send question"><Send className="h-4 w-4" aria-hidden /></Button>
       </div>
       <p id="ask-count" className="text-right text-xs text-muted-foreground">{text.length}/{MAX_QUESTION}</p>

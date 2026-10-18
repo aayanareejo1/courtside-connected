@@ -107,7 +107,8 @@ select t.id, p.n, p.j from (values
  ('Ottawa Peaks 15U Red','Isla N.',19),('Ottawa Peaks 15U Red','Grace S.',20),('Ottawa Peaks 15U Red','Ava W.',21),
  ('Lakeshore Storm 13U','Ava B.',2),('Lakeshore Storm 13U','Maya C.',4),('Lakeshore Storm 13U','Chloe D.',6),('Lakeshore Storm 13U','Priya E.',7),
  ('Lakeshore Storm 13U','Leah F.',9),('Lakeshore Storm 13U','Nora G.',10),('Lakeshore Storm 13U','Zara H.',11),('Lakeshore Storm 13U','Hannah I.',12),
- ('Lakeshore Storm 13U','Ella J.',14),('Lakeshore Storm 13U','Grace K.',15)
+ ('Lakeshore Storm 13U','Ella J.',14),('Lakeshore Storm 13U','Grace K.',15),
+ ('Lakeshore Storm 13U','Aayan A.',16),('Lakeshore Storm 13U','Alyssa M.',null)
 ) p(team,n,j) join public.teams t on t.name = p.team;
 
 insert into public.staff_members (team_id, display_name, role)

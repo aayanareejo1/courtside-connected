@@ -27,29 +27,46 @@ export const Route = createFileRoute("/api/public/ask")({
             Promise.resolve(supabase.from("staff_members").select("team_id,display_name,role").limit(2000)).then((r) => r.data ?? []).catch(() => []),
           ]);
           const facts = buildFacts({ ...data, staff }, content, body, body.now ?? Date.now());
-          const key = process.env["ANTHROPIC_API_KEY"];
+          const key = process.env["LOVABLE_API_KEY"];
           if (!key) return Response.json({ ...fallbackAnswer(facts), mode: "basic" });
-          const ask = () => fetch("https://api.anthropic.com/v1/messages", {
-            method: "POST",
-            headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
-            body: JSON.stringify({ model: "claude-haiku-5-5", max_tokens: 900, system: SYSTEM_PROMPT, messages: [...body.history.flatMap((h) => [{ role: "user", content: h.question }, { role: "assistant", content: h.answer }]), { role: "user", content: `FACTS\n${facts.text}\nEND FACTS\n\nFan question: ${body.question}` }] }),
-            signal: AbortSignal.timeout(12_000),
+          const [{ createOpenAI }, { streamText }] = await Promise.all([import("@ai-sdk/openai"), import("ai")]);
+          // Reuse the gateway-issued run id across SDK steps; never minted here.
+          let runId: string | undefined;
+          const provider = createOpenAI({
+            baseURL: "https://ai.gateway.lovable.dev/v1",
+            apiKey: key,
+            headers: { "Lovable-API-Key": key, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
+            fetch: async (input, init) => {
+              const headers = new Headers(init?.headers);
+              if (runId) headers.set("X-Lovable-AIG-Run-ID", runId);
+              const res = await fetch(input, { ...init, headers });
+              runId ??= res.headers.get("X-Lovable-AIG-Run-ID")?.trim() || undefined;
+              return res;
+            },
           });
           let reason = "";
-          for (let attempt = 0; attempt < 2; attempt++) {
-            try {
-              const res = await ask();
-              if (res.status === 429 || res.status >= 500) { reason = `model_${res.status}`; continue; } // one retry
-              if (!res.ok) { reason = `model_${res.status}`; break; }
-              const out = (await res.json()) as { content?: { type: string; text?: string }[]; stop_reason?: string };
-              const text = out.content?.find((c) => c.type === "text")?.text?.trim();
-              if (!text) { reason = "empty_answer"; break; }
-              return Response.json({ ...sanitizeAnswer(text, facts.links, out.stop_reason === "max_tokens"), mode: "ai" });
-            } catch (e) {
-              reason = e instanceof Error && e.name === "TimeoutError" ? "timeout" : "network";
-            }
+          try {
+            const result = streamText({
+              model: provider.responses("openai/gpt-6-astra"),
+              maxRetries: 1, // one bounded retry for 429/5xx
+              maxOutputTokens: 900,
+              abortSignal: request.signal,
+              system: SYSTEM_PROMPT,
+              messages: [
+                ...body.history.flatMap((h) => [{ role: "user" as const, content: h.question }, { role: "assistant" as const, content: h.answer }]),
+                { role: "user" as const, content: `FACTS\n${facts.text}\nEND FACTS\n\nFan question: ${body.question}` },
+              ],
+              providerOptions: { openai: { forceReasoning: true, reasoningEffort: "low", reasoningSummary: "auto", store: false, include: ["reasoning.encrypted_content"] } },
+            });
+            let failed = false;
+            for await (const part of result.fullStream) if (part.type === "error") { failed = true; reason = "model_error"; }
+            const text = failed ? "" : (await result.text).trim();
+            if (text) return Response.json({ ...sanitizeAnswer(text, facts.links, (await result.finishReason) === "length"), mode: "ai" });
+            reason ||= "empty_answer";
+          } catch (e) {
+            reason = e instanceof Error ? e.name : "network";
           }
-          console.error("Ask Courtside model failed", reason);
+          console.error("Ask OVAchamps model failed", reason);
           return Response.json({ ...fallbackAnswer(facts), mode: "basic", reason });
         } catch (e) {
           console.error("Ask Courtside data failed", e);

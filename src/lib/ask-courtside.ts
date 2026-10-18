@@ -90,10 +90,19 @@ const tokens = (s: string): string[] => s.toLowerCase().match(/\p{L}+/gu) ?? [];
 // "aayan.A", "Aayan A." or just "Aayan" -> players with that first name; a single letter after it narrows by last initial.
 export function matchPlayers<P extends { display_name: string }>(question: string, players: readonly P[]): P[] {
   const words = tokens(question);
+  // Prefer exact names. A repeated vowel is a common transcription difference
+  // (Aayan/Ayan), but must never override an actually listed Ayan.
+  const speechKey = (word: string) => word.replace(/([aeiou])\1+/g, "$1");
+  const exactNames = new Set(players.flatMap((p) => {
+    const first = tokens(p.display_name)[0];
+    return first && words.includes(first) ? [first] : [];
+  }));
   return players.filter((p) => {
     const [first, initial] = tokens(p.display_name);
-    if (!first || !words.includes(first)) return false;
-    const next = words[words.indexOf(first) + 1];
+    if (!first) return false;
+    const index = words.findIndex((word) => word === first || (!exactNames.has(word) && speechKey(word) === speechKey(first)));
+    if (index < 0) return false;
+    const next = words[index + 1];
     return !(next && next.length === 1 && initial && next !== initial);
   }).slice(0, 5);
 }

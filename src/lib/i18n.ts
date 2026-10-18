@@ -4,6 +4,7 @@ const en = {
   register: { cta: "Register for an OVA event", soon: "Opens OVA registration", live: "Opens Speer registration" },
   demo: { overview: "Event at a glance", now: "Happening now", noCurrent: "No confirmed live matches in progress.", next: "Next on the schedule", yourNext: "Where you need to be next", noNext: "No upcoming matches in this saved event schedule.", score: "Score", sets: "sets" },
   appName: "OVAchamps",
+  voice: { links: "Links from this answer", newTab: " (opens in a new tab)" },
   nav: { home: "Home", search: "Find", following: "Schedule", venue: "Venue", info: "Info", sponsors: "Sponsors" },
   live: { justNow: "Updated just now", updated: "Updated", sec: "s ago", min: " min ago", refreshing: "Checking for new scores…", auto: "Scores update automatically" },
   offline: { banner: "You are offline. Showing saved data from", saved: "Showing saved data from", retrying: "Weak connection. Retrying automatically.", noSaved: "You are offline. No event data has been saved on this device yet." },

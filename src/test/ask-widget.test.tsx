@@ -13,7 +13,7 @@ afterEach(() => { cleanup(); vi.unstubAllGlobals(); localStorage.clear(); });
 describe("floating Ask Courtside chat", () => {
   it("starts closed and opens from the button in the corner, then closes with Escape", () => {
     render(<AskWidget />);
-    const button = screen.getByRole("button", { name: "Ask" });
+    const button = screen.getByRole("button", { name: "Ask me" });
     expect(button.getAttribute("aria-expanded")).toBe("false");
     expect(document.getElementById("ask-panel")!.hidden).toBe(true);
     fireEvent.click(button);

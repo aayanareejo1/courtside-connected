@@ -1,0 +1,12 @@
+## Data, source and schedule rules
+- Each source is a server-side adapter mapping into canonical tables; the front end never reads a source platform. Why: sources (AES, TIMU, Speer, MyTeam) change per event.
+- Matches carry an optional pool label so TIMU pool play maps into canonical rows.
+- Sync resolves every name before writing so a bad batch changes nothing; roster refreshes keep player IDs by jersey. Why: last known data and follows survive source errors.
+- Sync runs on a short managed schedule via a cron-authenticated public job route; every run records provenance (live, sample, snapshot, metadata); failures keep last known data. TIMU parses live HTML only when config names a tournament ID.
+- Speer is a swappable roster adapter (mock reads a CSV); Register links out. AES/MyTeam turn on only through source config; AES never deletes rows, MyTeam replaces only its own matches, beach pairs become initials. Real data is live only on/after its event day (Toronto), earlier days are snapshots, demo-dated data is sample. Why: labels stay honest.
+- Public reads (directory, content, venue, coaches, court matches) use separate namespaced device caches with offline-capable queries; never cache staff sessions or private responses. Why: schedules stay visible on venue Wi-Fi.
+- Source notices use shared pure rules and one badge component attributed by match source_id; missing attribution is conservative. Why: honest labels without per-row noise.
+- Combined schedules resolve player follows to teams, dedupe by match ID, and use shared pure helpers for upcoming rows, arrival guidance, tight turnarounds and clashes. Times use the venue's Toronto timezone. Why: consistent, tested guidance matching venue clocks.
+- Calendar UI reuses buildCalendar output (agenda/day toggle in memory); no screen recomputes leave times, ends or conflicts.
+- Court schedules use a pure current-or-next plus three later selector; map markers need finite in-range coordinates and courts stay reachable as a list.
+- Ask OVAchamps gets the last three exchanges and resolves follow ups to the earlier player/team (not for sponsor, hotel, merch, 50/50 or directions); a named player/team gets a full profile. Venue directions come from one pure Google/Apple Maps helper.
