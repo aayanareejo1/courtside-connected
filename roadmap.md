@@ -1,4 +1,12 @@
 # Build order (seeded first, then one live source)
+## Player examples and voice parity
+- [x] Add both example players to seed and sample roster; preserve Aayan's #16 and leave Alyssa's jersey unknown.
+- [ ] Apply supabase/example-group-players.sql to the external event database; blocked on database owner execution.
+- [x] Make voice resolve player names and follow-up questions from the same facts as typed chat, including current chat context.
+- [x] Display verified clickable links returned during voice calls.
+- [x] Full suite: 219 tests passed; real voice backend answered Ayan/Aayan using published facts and returned 13 verified links.
+- [ ] Verify an audible hosted conversation; sandbox media connectivity does not establish spoken-call success.
+
 - [x] 1. Seed data refresh: fictional rosters + coaches for every indoor team, full Day 1 TIMU-style pools
 - [x] 2. Mock adapters (TIMU, Speer CSV, AES, MyTeam snapshot) with last-good fallback
 - [x] 3. Map and search: placeholder floor plan, two halls, courts 5/9/13/17/20/23
@@ -59,3 +67,4 @@
 - [x] Verified real-event Home, Search, team follow, populated calendar and ICS export, court pin, Info, Sponsors and Ask panel at 375px and desktop. No horizontal overflow.
 - [ ] Deliver and merge the redesign.
 - Existing issue observed during review: returning Home after a reload can report a source-badge hydration mismatch between saved snapshot and sample labels; data-cache logic was not changed by this visual redesign.
+- [x] Bottom-right 'Ask me' chat button; voice mode like ChatGPT (big voice screen, mic icon in composer) instead of a Talk button.

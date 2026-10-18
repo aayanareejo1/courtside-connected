@@ -33,7 +33,7 @@ describe("TIMU mapping", () => {
 describe("Speer roster CSV", () => {
   it("never stores full last names and keeps two coaches", () => {
     const [team] = parseRosterCsv(speerRosterCsv);
-    expect(team!.players).toHaveLength(12);
+    expect(team?.players).toHaveLength(12);
     expect(team!.players[0]).toEqual({ display_name: "Ava B.", jersey_number: 2 });
     expect(team!.staff.map((s) => s.role)).toEqual(["Head Coach", "Assistant Coach"]);
     expect(JSON.stringify(team)).not.toContain("Brennan");
@@ -41,6 +41,12 @@ describe("Speer roster CSV", () => {
   it("rejects a row with a bad jersey number", () => {
     const bad = speerRosterCsv.replace("2,Ava", "abc,Ava");
     expect(() => parseRosterCsv(bad)).toThrow(/jersey/);
+  });
+  it("includes both group examples without inventing Alyssa's jersey", () => {
+    const team = parseRosterCsv(speerRosterCsv)[0];
+    expect(team?.team).toBe("Lakeshore Storm 13U");
+    expect(team?.players.find((p) => p.display_name === "Aayan A.")).toEqual({ display_name: "Aayan A.", jersey_number: 16 });
+    expect(team?.players.find((p) => p.display_name === "Alyssa M.")).toEqual({ display_name: "Alyssa M.", jersey_number: null });
   });
   it("rejects a CSV missing a required column", () => {
     expect(() => parseRosterCsv("first_name,last_name\nA,B")).toThrow(/missing column/);

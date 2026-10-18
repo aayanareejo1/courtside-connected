@@ -2,6 +2,9 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { stepCountIs, streamText, tool, type ModelMessage } from "ai";
 import process from "node:process";
 import { z } from "zod";
+import { appendVoiceText, buildVoiceFacts, voiceHistory, type EventLookup } from "@/lib/voice-facts";
+import type { AskTurn } from "@/lib/ask-courtside";
+import { parseAskRequest } from "@/lib/ask-courtside";
 
 export type LiveConfig = {
   baseURL: string;
@@ -132,14 +135,12 @@ Backend tools: Look up this event's players, teams, coaches, matches, courts, ha
 Delegate to the backend when: The user asks about any event fact, a player, a team, a match, a place, a time or a link,
 or a correction changes a question already being worked on.
 Do not delegate to the backend when: Greeting, clarifying a question, or repeating
-a still-current answer. Wait for the backend result before presenting its answer. Say link names, never read out web addresses.`;
-
-type EventLookup = { facts: string; links: string[] };
+a still-current answer. Wait for the backend result before presenting its answer. Say link names, never read out web addresses.
+Names can be transcribed imperfectly. Use the backend lookup before saying a player is missing. Links returned by the backend appear as tappable links on the call screen.`;
 
 const eventLookupInput = z.object({ question: z.string().min(1).max(300) }).strict();
 
-async function lookupEventFacts(question: string, now: number) {
-  const { buildFacts } = await import("@/lib/ask-courtside");
+export async function lookupEventFacts(question: string, now: number, history: readonly AskTurn[] = []) {
   const { readEventData } = await import("@/lib/event-data");
   const { readEventContent } = await import("@/lib/event-content");
   const { supabase } = await import("@/integrations/supabase/client");
@@ -151,8 +152,7 @@ async function lookupEventFacts(question: string, now: number) {
       .catch(() => []),
   ]);
   // Device follows are not uploaded during calls; answers use what the fan says.
-  const facts = buildFacts({ ...data, staff }, content, { question, follows: [], history: [] }, now);
-  return { facts: facts.text.slice(0, 12_000), links: facts.links.map((l) => l.title).slice(0, 8) };
+  return buildVoiceFacts({ ...data, staff }, content, question, now, history);
 }
 
 function isListeningSound(text: string) {
@@ -160,7 +160,7 @@ function isListeningSound(text: string) {
   return /^(?:m+hm+|uhhuh)[.,!]*$/.test(normalized);
 }
 
-async function answerQuestion(
+export async function answerQuestion(
   messages: ModelMessage[],
   config: LiveConfig,
   correlation: { runID: string; sessionID: string | undefined; delegationID: string },
@@ -215,8 +215,10 @@ async function answerQuestion(
     },
     system:
       "Help a spoken event companion answer the latest fan question about this volleyball event. " +
-      "Transcripts may be incomplete or corrected. Use the latest correction. " +
+      "Transcripts may be incomplete or corrected. Use the latest correction and retain the earlier player or team for follow-up questions. " +
       "Always call lookup_event_facts with the fan's current question before answering, and answer only from its facts. " +
+      "Call the lookup once per question; after a successful tool result, answer rather than calling it again unchanged. " +
+      "If no player matches, ask for spelling or last initial instead of claiming that player does not exist. " +
       "If the facts do not cover it, say so and suggest the Info page or event staff. " +
       "Write for speech: no markdown, no web addresses, name links by title and say they appear in the app. " +
       "Use Toronto times as given. Answer in at most 90 words.",
@@ -227,7 +229,7 @@ async function answerQuestion(
         inputSchema: eventLookupInput,
         execute: async (args) => {
           signal.throwIfAborted();
-          const result = await lookupEventFacts(args.question, config.now ?? Date.now());
+          const result = await lookupEventFacts(args.question, config.now ?? Date.now(), voiceHistory(messages));
           onPlan(result);
           return result;
         },
@@ -458,7 +460,7 @@ export function bindLiveConnection(
         () => {
           const updates = transcripts.slice(transcriptCursor);
           if (updates.some(({ role, listeningSound }) => role === "user" && !listeningSound)) delete pending.plan;
-          backendMessages.push(...updates.map(({ role, text }) => ({ role, content: text })));
+          for (const { role, text } of updates) appendVoiceText(backendMessages, role, text);
           transcriptCursor = transcripts.length;
           taskRevision = revision;
         },
@@ -628,6 +630,11 @@ export function bindLiveConnection(
           throw new Error("Voice startup message required");
         }
         starting = true;
+        // Bounded recent chat context, treated as user data, never instructions.
+        const history = parseAskRequest({ question: "voice", history: event.history })?.history ?? [];
+        for (const turn of history) {
+          backendMessages.push({ role: "user", content: turn.question }, { role: "assistant", content: turn.answer });
+        }
         execution.waitUntil(
           startSession(event.sdp).catch((error) => {
             if (!closing)

@@ -80,11 +80,13 @@ export async function applySync(db: Db, sourceId: string, result: AdapterResult)
   }
   for (const r of rosterRows) {
     // Players are matched by jersey so existing IDs (and device follows) survive a roster refresh.
-    const existing = must(await db.from("players").select("id,jersey_number").eq("team_id", r.id));
+    const existing = must(await db.from("players").select("id,jersey_number,display_name").eq("team_id", r.id));
     const byJersey = new Map(existing.map((p) => [p.jersey_number, p.id]));
     const keep = new Set<string>();
     for (const p of r.players) {
-      const id = byJersey.get(p.jersey_number);
+      const id = p.jersey_number === null
+        ? existing.find((row) => row.jersey_number === null && row.display_name === p.display_name)?.id
+        : byJersey.get(p.jersey_number);
       if (id) {
         keep.add(id);
         must(await db.from("players").update({ display_name: p.display_name }).eq("id", id));

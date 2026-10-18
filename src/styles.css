@@ -59,3 +59,9 @@
 #ask-panel[hidden] { display: none; }
 @keyframes screen-in { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+
+/* Voice mode orb: breathes while listening. */
+.voice-orb { width: 9rem; height: 9rem; border-radius: 9999px; background: radial-gradient(circle at 40% 35%, color-mix(in oklab, var(--primary) 60%, white), var(--primary) 70%); box-shadow: 0 0 60px color-mix(in oklab, var(--primary) 45%, transparent); opacity: .7; transition: opacity 300ms ease, transform 300ms ease; }
+.voice-orb.is-live { opacity: 1; animation: voice-breathe 2.4s ease-in-out infinite; }
+@keyframes voice-breathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+@media (prefers-reduced-motion: reduce) { .voice-orb.is-live { animation: none; } }

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { AskTurn } from "@/lib/ask-courtside";
 
 export type LiveEvent = {
   type: string;
@@ -31,6 +32,7 @@ const initialState: LiveState = {
 export function useLiveVoice(
   options: {
     url?: string;
+    history?: AskTurn[];
     onEvent?: (event: LiveEvent) => void | Promise<void>;
   } = {},
 ) {
@@ -71,6 +73,7 @@ export function useLiveVoice(
     }
     const voice = createLiveVoice({
       url: endpoint.href,
+      history: latest.current.history ?? [],
       audio,
       onEvent(event) {
         if (!mounted.current || controller.current !== voice) return;
@@ -121,6 +124,7 @@ export function useLiveVoice(
 
 type LiveOptions = {
   url: string;
+  history: AskTurn[];
   audio: HTMLAudioElement;
   onEvent: (event: LiveEvent) => void;
 };
@@ -279,7 +283,8 @@ function createLiveVoice(options: LiveOptions) {
   async function gatherCandidates(connection: RTCPeerConnection) {
     if (connection.iceGatheringState === "complete") return;
     await new Promise<void>((resolve, reject) => {
-      const timeout = setTimeout(() => finish(new Error("Voice network setup timed out")), 10_000);
+      // Some networks never report "complete"; continue with the candidates gathered so far.
+      const timeout = setTimeout(() => finish(), 2_500);
       function finish(error?: Error) {
         clearTimeout(timeout);
         connection.removeEventListener("icegatheringstatechange", changed);
@@ -309,7 +314,7 @@ function createLiveVoice(options: LiveOptions) {
         stream.getTracks().forEach((track) => track.stop());
         return;
       }
-      const connection = new RTCPeerConnection();
+      const connection = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
       peer = connection;
       for (const track of stream.getAudioTracks()) {
         track.enabled = !muted;
@@ -351,7 +356,7 @@ function createLiveVoice(options: LiveOptions) {
       deadline = setTimeout(() => fail("Voice session did not start"), 50_000);
       socket.onopen = () => {
         if (!starting()) return release();
-        send({ type: "app.start", sdp });
+        send({ type: "app.start", sdp, history: options.history });
       };
       socket.onmessage = ({ data }) => {
         try {

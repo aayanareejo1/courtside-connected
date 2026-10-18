@@ -1,10 +1,13 @@
 // Talk to OVAchamps: a real two-way voice call. Shown only when the server reports voice is switched on.
 // Captions stay in component state for this call; device follows are not sent.
 import { useEffect, useRef, useState } from "react";
-import { Mic, MicOff, Phone, PhoneOff, Volume2 } from "lucide-react";
+import { ExternalLink, Mic, MicOff, Volume2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLiveVoice, type LiveEvent } from "@/hooks/use-live-voice";
 import { appNow } from "@/lib/clock";
+import { readVoiceLinks, type EventLookup } from "@/lib/voice-facts";
+import { t } from "@/lib/i18n";
+import type { AskTurn } from "@/lib/ask-courtside";
 
 type Line = { role: "user" | "assistant"; text: string };
 
@@ -18,10 +21,12 @@ export function useVoiceAvailable() {
   return available;
 }
 
-export function VoiceCall() {
+export function VoiceCall({ onEnd, history = [] }: { onEnd: () => void; history?: AskTurn[] }) {
   const [lines, setLines] = useState<Line[]>([]);
-  const [url, setUrl] = useState("/api/live");
+  const [links, setLinks] = useState<EventLookup["links"]>([]);
   const onEvent = (event: LiveEvent) => {
+    if (event.type === "app.delegation.pending") setLinks([]);
+    if (event.type === "app.event.links") setLinks(readVoiceLinks(event["links"]));
     const role: Line["role"] | null = event.type === "session.input_transcript.delta" ? "user" : event.type === "session.output_transcript.delta" ? "assistant" : null;
     const delta = typeof event["delta"] === "string" ? (event["delta"] as string) : "";
     if (!role || !delta) return;
@@ -31,32 +36,40 @@ export function VoiceCall() {
       return [...prev, { role, text: delta }].slice(-12);
     });
   };
-  const voice = useLiveVoice({ url, onEvent });
-  const pendingStart = useRef(false);
-  useEffect(() => { if (pendingStart.current) { pendingStart.current = false; voice.start(); } }, [url, voice]);
-  const idle = voice.status === "idle" || voice.status === "closed";
-  const begin = () => { setLines([]); pendingStart.current = true; setUrl(`/api/live?now=${Math.round(appNow())}`); };
+  // The app clock (demo aware) is fixed when voice mode opens.
+  const [url] = useState(() => `/api/live?now=${Math.round(appNow())}`);
+  const voice = useLiveVoice({ url, onEvent, history });
+  // Start on mount and stop on unmount, so a remount (React dev double-mount) starts a fresh call
+  // instead of leaving the screen stuck on "Connecting...".
+  const { start, stop } = voice;
+  useEffect(() => {
+    start();
+    return () => stop();
+  }, [start, stop]);
+  const end = () => { voice.stop(); onEnd(); };
+  const live = voice.status === "connected";
+  const label = voice.error ? "Call ended" : voice.status === "connecting" ? "Connecting..." : live ? (voice.muted ? "Muted" : "Listening") : voice.status === "stopping" ? "Ending..." : "Call ended";
+  const last = lines[lines.length - 1];
 
-  return <section aria-label="Voice call with OVAchamps" className="shrink-0 border-b px-4 py-3">
+  return <section aria-label="Voice mode with OVAchamps" className="flex min-h-0 flex-1 flex-col items-center justify-between gap-6 px-5 py-8 text-center">
     <audio ref={voice.audioRef} className="sr-only" />
-    <div className="flex flex-wrap items-center gap-2">
-      {idle
-        ? <Button type="button" onClick={begin} className="h-11 gap-2"><Phone className="h-5 w-5" aria-hidden />Talk to OVAchamps</Button>
-        : <>
-          <Button type="button" variant="destructive" onClick={voice.stop} className="h-11 gap-2"><PhoneOff className="h-5 w-5" aria-hidden />End call</Button>
-          <Button type="button" variant="outline" disabled={voice.status !== "connected"} onClick={() => voice.setMuted(!voice.muted)} aria-pressed={voice.muted} className="h-11 gap-2">
-            {voice.muted ? <MicOff className="h-5 w-5" aria-hidden /> : <Mic className="h-5 w-5" aria-hidden />}{voice.muted ? "Unmute" : "Mute"}
-          </Button>
-        </>}
-      {voice.playbackBlocked && <Button type="button" variant="outline" onClick={voice.resumePlayback} className="h-11 gap-2"><Volume2 className="h-5 w-5" aria-hidden />Play sound</Button>}
-      <p role="status" className="text-sm text-muted-foreground">
-        {voice.status === "connecting" ? "Connecting..." : voice.status === "connected" ? (voice.muted ? "Muted" : "Listening") : voice.status === "stopping" ? "Ending call..." : ""}
-      </p>
+    <p role="status" className="text-sm font-medium text-muted-foreground">{label}</p>
+    <div aria-hidden className={`voice-orb ${live && !voice.muted ? "is-live" : ""}`} />
+    <div className="min-h-24 w-full min-w-0 flex-1 space-y-4 overflow-y-auto overscroll-contain">
+      {voice.error ? <p role="alert" className="text-sm text-destructive">{voice.error}</p>
+        : last ? <p aria-live="polite" className="text-base"><span className="sr-only">{last.role === "user" ? "You said: " : "OVAchamps said: "}</span>{last.text}</p>
+        : <p className="text-sm text-muted-foreground">Just start talking. Your microphone is used only during voice mode.</p>}
+      {links.length > 0 && <nav aria-label={t.voice.links} className="space-y-2 text-left">{links.map((link) =>
+        <Button key={link.url} asChild variant="secondary" className="h-auto min-h-12 w-full justify-between gap-3 whitespace-normal px-3 py-3">
+          <a href={link.url} target="_blank" rel="noopener noreferrer"><span className="min-w-0 break-words">{link.title}</span><ExternalLink className="h-4 w-4 shrink-0" aria-hidden /><span className="sr-only">{t.voice.newTab}</span></a>
+        </Button>)}</nav>}
     </div>
-    {voice.error && <p role="alert" className="mt-2 text-sm text-destructive">{voice.status === "closed" && /not switched on|503/i.test(voice.error) ? "Voice calls are not available right now." : voice.error}</p>}
-    {idle && !voice.error && <p className="mt-2 text-xs text-muted-foreground">Uses your microphone only during the call. Your voice goes to the voice service to answer you.</p>}
-    {lines.length > 0 && <ol aria-label="Call captions" aria-live="polite" className="mt-3 max-h-40 space-y-1 overflow-y-auto text-sm">
-      {lines.map((l, i) => <li key={i}><span className="font-semibold">{l.role === "user" ? "You: " : "OVAchamps: "}</span>{l.text}</li>)}
-    </ol>}
+    <div className="flex items-center gap-6">
+      {voice.playbackBlocked && <Button type="button" variant="outline" size="icon" onClick={voice.resumePlayback} aria-label="Play sound" className="h-14 w-14 rounded-full"><Volume2 className="h-6 w-6" aria-hidden /></Button>}
+      <Button type="button" variant="outline" size="icon" disabled={!live} onClick={() => voice.setMuted(!voice.muted)} aria-pressed={voice.muted} aria-label={voice.muted ? "Unmute" : "Mute"} className="h-14 w-14 rounded-full">
+        {voice.muted ? <MicOff className="h-6 w-6" aria-hidden /> : <Mic className="h-6 w-6" aria-hidden />}
+      </Button>
+      <Button type="button" variant="destructive" size="icon" onClick={end} aria-label="End voice mode" className="h-14 w-14 rounded-full"><X className="h-6 w-6" aria-hidden /></Button>
+    </div>
   </section>;
 }
