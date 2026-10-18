@@ -18,6 +18,8 @@ async function loadEventContent() {
   return { event, info: info.data ?? [], slots: slots.data ?? [], announcements: announcements.data ?? [] };
 }
 type Content = Awaited<ReturnType<typeof loadEventContent>>;
+// Server side read of the same published content the Info and Sponsors screens use.
+export const readEventContent = () => withDeviceCache(loadEventContent, deviceStorage(), CONTENT_CACHE_KEY);
 export const eventContentQuery = queryOptions({
   queryKey: ["event-content"],
   staleTime: 30_000,

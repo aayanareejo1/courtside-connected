@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { DEMO_START, demoClock, nextDemoState } from "@/lib/clock";
 import { buildCalendar, toIcs } from "@/lib/calendar";
-import { buildFacts, fallbackAnswer, parseAskRequest } from "@/lib/ask-courtside";
+import { buildFacts, fallbackAnswer, matchPlayers, parseAskRequest, parseQuantity, sanitizeAnswer } from "@/lib/ask-courtside";
+import { KNOWN_LINKS } from "@/lib/ask-knowledge";
 import { mapTimu } from "@/lib/source-mapping";
 import { timuDay1 } from "@/server/fixtures/timu-day1";
 
@@ -54,26 +55,58 @@ describe("calendar", () => {
 });
 
 describe("Ask Courtside", () => {
-  it("validates requests", () => {
+  const t0 = Date.parse("2026-04-19T16:30:00Z");
+  const data = {
+    teams: [{ id: "T1", name: "Lakeshore Storm 13U", club_id: "c", divisions: { name: "13U Girls" } }, { id: "X", name: "Kingston Tide 13U" }],
+    players: [{ id: "p1", team_id: "T1", display_name: "Aayan A.", jersey_number: 16 }, { id: "p2", team_id: "X", display_name: "Olivia C.", jersey_number: 1 }],
+    clubs: [{ id: "c", name: "Lakeshore Storm" }],
+    courts: [{ id: "5", label: "5", areas: { name: "Hall 1" } }],
+    sources: [{ id: "s", last_provenance: "sample" }],
+    matches: [m("a", "2026-04-19T17:00:00Z", "5", "T1", "X"), m("b", "2026-04-20T15:00:00Z", "5", "X", "T1")],
+  };
+  const content = { event: { name: "Ontario Championships", venues: { name: "Enercare Centre", address: "100 Princes Blvd" } }, info: [{ category: "tickets", title: "Buy tickets", url: "https://tickets.example/event?qty={qty}", description: "Game admission" }], slots: [], announcements: [] };
+  const req = (question: string, follows: { type: "team" | "player"; id: string }[] = []) => ({ question, follows });
+
+  it("validates requests and reads ticket quantities", () => {
     expect(parseAskRequest({ question: "" })).toBeNull();
     expect(parseAskRequest({ question: "x".repeat(301) })).toBeNull();
     expect(parseAskRequest({ question: " Where? ", follows: [{ type: "team", id: "t" }, { type: "bad", id: "z" }], now: 5 })).toEqual({ question: "Where?", follows: [{ type: "team", id: "t" }], now: 5 });
+    expect([parseQuantity("buy 3 tickets"), parseQuantity("two tickets please"), parseQuantity("tickets"), parseQuantity("99 tickets")]).toEqual([3, 2, null, null]);
   });
-  const data = {
-    teams: [{ id: "T1", name: "Skyline" }, { id: "X", name: "Peaks" }],
-    players: [], courts: [{ id: "5", label: "5", areas: { name: "Hall 1" } }],
-    sources: [{ id: "s", last_provenance: "sample" }], matches: [m("a", "2026-04-19T17:00:00Z", "5", "T1", "X")],
-  };
-  it("builds facts from canonical data with the source label and leave by time", () => {
-    const f = buildFacts(data, [{ type: "team", id: "T1" }], Date.parse("2026-04-19T16:30:00Z"));
-    expect(f.lines[0]).toContain("Skyline vs Peaks");
-    expect(f.lines[0]).toContain("Court 5 (Hall 1)");
-    expect(f.lines[0]).toContain("Sample data, not live");
-    expect(f.lines[0]).toMatch(/leave by 12:45/);
+  it("finds a player from 'aayan.A' and shows team, division, club and the next match with court and hall", () => {
+    expect(matchPlayers("where is aayan.A playing", data.players).map((p) => p.id)).toEqual(["p1"]);
+    expect(matchPlayers("where is aayan.B playing", data.players)).toEqual([]);
+    const f = buildFacts(data, content, req("where is aayan.A playing"), t0);
+    expect(f.playerLines[0]).toContain("Lakeshore Storm 13U");
+    expect(f.playerLines[0]).toContain("13U Girls");
+    expect(f.matchLines[0]).toContain("Court 5, Hall 1");
+    expect(f.matchLines[0]).toContain("Sample data, not live");
+    expect(f.matchLines[0]).toContain("be at the court by 12:45");
   });
-  it("falls back to a plain answer without a model", () => {
-    expect(fallbackAnswer(buildFacts(data, [], Date.parse("2026-04-19T16:30:00Z")))).toContain("Skyline");
-    expect(fallbackAnswer(buildFacts({ ...data, matches: [] }, [], 0))).toContain("do not have");
+  it("fills the ticket quantity into the staff managed tickets link", () => {
+    const f = buildFacts(data, content, req("where can I buy 3 tickets for tomorrow"), t0);
+    expect(f.links[0]!.url).toBe("https://tickets.example/event?qty=3");
+    expect(f.intent.tickets && f.intent.day === "tomorrow").toBe(true);
+    expect(f.matchLines.some((l) => l.includes("Apr 20"))).toBe(true);
+    const out = fallbackAnswer(f);
+    expect(out.answer).toContain("For 3 tickets");
+    expect(out.links[0]!.url).toContain("qty=3");
+  });
+  it("answers sponsor questions with the sponsor page and contact", () => {
+    const out = fallbackAnswer(buildFacts(data, content, req("how do I become a sponsor"), t0));
+    expect(out.answer).toContain("Kerish Maharaj");
+    expect(out.links[0]!.url).toBe("https://www.ontariovolleyball.org/ocs-sponsorship");
+  });
+  it("keeps only links it was given and never exposes private links", () => {
+    const f = buildFacts(data, content, req("hotels"), t0);
+    const out = sanitizeAnswer("Book [here](https://evil.example/x) or [hotels](https://www.ontariovolleyball.org/accommodations). Also https://evil.example/y.", f.links);
+    expect(out.answer).not.toContain("evil.example");
+    expect(out.links.map((l) => l.url)).toEqual(["https://www.ontariovolleyball.org/accommodations"]);
+    expect(f.links.some((l) => l.url.includes("docs.google.com") || l.url.includes("catalyst2026"))).toBe(false);
+  });
+  it("offers every case study link for a use", () => {
+    const cats = new Set(KNOWN_LINKS.map((l) => l.category));
+    for (const c of ["results", "event", "venue", "sponsor", "hotel", "rules", "social", "raffle", "merch", "registration"]) expect(cats.has(c)).toBe(true);
   });
 });
 

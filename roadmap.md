@@ -46,3 +46,9 @@
 - `POST /api/public/ask` (Ask Courtside): reads canonical event data, sends a short facts block to Claude, falls back to a basic answer without `ANTHROPIC_API_KEY` or on failure. Set the key as a server secret only.
 - Sample TIMU day one now has finished, live and upcoming matches that fit the demo clock. A sync that reports no result for a match removes any old score.
 - Planned, not built: leave by push notifications.
+
+## Ask Courtside (AI assistant)
+- Model: Claude Haiku via `POST /api/public/ask`. Needs the server secret `ANTHROPIC_API_KEY` (Cloudflare Worker secret). Without it, or if the model fails, a plain rule based answer is returned (`mode: "basic"`).
+- Knowledge: live event data (matches, teams, players, courts, announcements, sponsor slots), published info links (staff editable) and the case study links in `src/lib/ask-knowledge.ts`, each with what it is for. The private roster sheet and the Catalyst app are deliberately excluded.
+- Safety: only URLs from its LINKS list can appear in an answer, answers say when data is sample or a snapshot, names stay first name and last initial, questions are capped at 300 characters and rate limited.
+- Tickets: no vendor link has been supplied. Run `supabase/ask-links.sql` for a placeholder, then put the vendor URL (with `{qty}`) in the tickets info link.
