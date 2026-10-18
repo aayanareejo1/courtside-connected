@@ -24,7 +24,7 @@ function HomeMap() {
       <section aria-labelledby="map-title">
         <h2 id="map-title" className="text-2xl font-bold uppercase">{t.map.title}</h2>
         <VenueMap areas={data.areas} courts={data.courts} width={data.venue.plan_width} height={data.venue.plan_height} floorPlan={data.venue.floor_plan_path} sponsorPins={pins} />
-        {pins.length > 0 && <ul className="mt-2 space-y-1">{pins.map((slot) => <li key={slot.id}><Link to="/sponsors" hash={`slot-${slot.id}`} className="tap flex items-center gap-2 text-sm text-primary"><Gift className="h-4 w-4 text-accent-foreground" aria-hidden />{slot.headline ?? slot.sponsors?.name}</Link></li>)}</ul>}
+        {pins.length > 0 && <ul className="mt-2 space-y-1">{pins.map((slot) => <li key={slot.id}><Link to="/sponsors" hash={`slot-${slot.id}`} className="tap flex items-center gap-2 text-sm text-primary"><Gift className="h-4 w-4 text-accent" aria-hidden />{slot.headline ?? slot.sponsors?.name}</Link></li>)}</ul>}
       </section>
       <MapTextList areas={data.areas} courts={data.courts} />
     </>
@@ -54,11 +54,11 @@ function Home() {
   const venue = event.venues as unknown as { name: string; courts: { count: number }[] } | null;
 
   return (
-    <div className="space-y-6">
-      <section className="bg-ink p-3 text-ink-foreground">
-        <p className="text-sm uppercase tracking-widest text-accent">{venue?.name}</p>
-        <h1 className="mt-1 text-2xl font-bold uppercase leading-tight">{event.name}</h1>
-        <p className="mt-2 text-sm opacity-80">{event.starts_on} – {event.ends_on} · {venue?.courts?.[0]?.count ?? 0} {t.home.courts}</p>
+    <div className="space-y-8">
+      <section className="event-heading py-3 pl-5 text-foreground">
+        <p className="text-xs font-semibold uppercase text-primary">{venue?.name}</p>
+        <h1 className="mt-3 text-4xl font-bold uppercase leading-tight sm:text-5xl">{event.name}</h1>
+        <p className="mt-3 text-sm text-muted-foreground">{event.starts_on} – {event.ends_on} · {venue?.courts?.[0]?.count ?? 0} {t.home.courts}</p>
       </section>
 
       <HomeOverview data={directory} />
@@ -77,7 +77,7 @@ function Home() {
           {event.event_days.map((d) => {
             const sources = d.day_division_sources.flatMap((row) => row.sources ? [row.sources] : []);
             const identified = sources.map((source, index) => ({ ...source, id: `${d.id}-${index}` }));
-            return <li key={d.id} className="rounded-lg bg-card p-3">
+            return <li key={d.id} className="rounded-lg border bg-card p-4">
               <p className="font-semibold">{d.label} <span className="font-normal text-muted-foreground">{d.date}</span></p>
               <SourceBadges matches={identified.length ? identified.map((source) => ({ source_id: source.id })) : [{}]} sources={identified} savedAt={data.offlineSavedAt} />
             </li>;

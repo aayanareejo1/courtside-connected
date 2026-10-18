@@ -15,7 +15,7 @@ export function SponsorCard({ slot }: { slot: SponsorSlot }) {
   const Icon = offer ? Gift : Trophy;
   return <article id={`slot-${slot.id}`} className="scroll-mt-20 overflow-hidden rounded-lg border bg-card">
     <div className={`flex items-center gap-3 border-b p-4 ${offer ? "bg-accent/15" : "bg-secondary"}`}>
-      {logo ? <img src={logo} alt={sponsor.name} className="h-12 w-12 object-contain" /> : <Icon className={`h-8 w-8 shrink-0 ${offer ? "text-accent-foreground" : "text-primary"}`} aria-hidden />}
+      {logo ? <img src={logo} alt={sponsor.name} className="h-12 w-12 object-contain" /> : <Icon className={`h-8 w-8 shrink-0 ${offer ? "text-accent" : "text-primary"}`} aria-hidden />}
       <h2 className="min-w-0 break-words text-2xl font-bold uppercase">{sponsor.name}</h2>
     </div>
     <div className="space-y-3 p-4">{slot.headline && <h3 className="font-sans text-base font-semibold">{slot.headline}</h3>}{slot.offer_text && <p className="text-sm text-muted-foreground">{slot.offer_text}</p>}

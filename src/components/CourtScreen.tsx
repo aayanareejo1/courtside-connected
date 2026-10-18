@@ -49,7 +49,7 @@ export function CourtScreen({ court, courts, areas, venue, matches, sources, sav
     <SourceBadges matches={matches} sources={sources} savedAt={savedAt} />
     <section aria-label={t.court.comingUp}>
       <h2 className="mb-2 text-2xl font-bold uppercase">{t.court.comingUp}</h2>
-      {schedule.featured ? <div className="rounded-lg border-2 border-primary bg-primary/5 p-1"><MatchRow m={schedule.featured} featured /></div> : <p className="text-muted-foreground">{t.court.none}</p>}
+      {schedule.featured ? <div className="border-l-2 border-primary pl-3"><MatchRow m={schedule.featured} featured /></div> : <p className="text-muted-foreground">{t.court.none}</p>}
       {schedule.nextThree.length > 0 && <ul className="mt-2 space-y-2">{schedule.nextThree.map(m => <li key={m.id}><MatchRow m={m} /></li>)}</ul>}
     </section>
     {!!schedule.finals.length && <section aria-label={t.court.results}>

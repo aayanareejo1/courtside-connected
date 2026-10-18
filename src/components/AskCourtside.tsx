@@ -27,7 +27,7 @@ export function renderAnswer(text: string): ReactNode[] {
   while ((m = re.exec(text))) {
     if (m.index > last) out.push(<Fragment key={i++}>{text.slice(last, m.index)}</Fragment>);
     const [, label, url] = m;
-    out.push(isSafe(url!) ? <a key={i++} href={url} target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline underline-offset-4">{label}<span className="sr-only"> (opens in a new tab)</span></a> : <Fragment key={i++}>{label}</Fragment>);
+    out.push(url && isSafe(url) ? <a key={i++} href={url} target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline underline-offset-4">{label}<span className="sr-only"> (opens in a new tab)</span></a> : <Fragment key={i++}>{label}</Fragment>);
     last = m.index + m[0].length;
   }
   if (last < text.length) out.push(<Fragment key={i++}>{text.slice(last)}</Fragment>);
@@ -64,7 +64,7 @@ export function AskCourtside({ initialQuestion, trigger }: { initialQuestion?: s
   return <div className="space-y-4">
     <div className="flex gap-3 rounded-lg bg-secondary p-3 text-secondary-foreground"><MessageCircle className="mt-0.5 h-5 w-5 shrink-0" aria-hidden /><p>{ASK_INTRO}</p></div>
     <ul aria-label="Suggested questions" className="flex flex-wrap gap-2">{ASK_SUGGESTIONS.map((s) =>
-      <li key={s}><Button type="button" variant="outline" className="h-auto min-h-11 whitespace-normal rounded-full text-left" disabled={busy} onClick={() => void ask(s)}>{s}</Button></li>)}</ul>
+      <li key={s}><Button type="button" variant="outline" className="h-auto min-h-11 whitespace-normal rounded-lg text-left" disabled={busy} onClick={() => void ask(s)}>{s}</Button></li>)}</ul>
     <ol aria-label="Conversation" aria-live="polite" className="space-y-4">{items.map((x) => <li key={x.id} className="space-y-2">
       <p className="ml-auto w-fit max-w-[85%] rounded-lg bg-primary px-3 py-2 text-primary-foreground"><span className="sr-only">You asked: </span>{x.question}</p>
       {x.error ? <p role="alert" className="rounded-lg border border-destructive bg-card px-3 py-2 text-destructive">{x.error}</p>

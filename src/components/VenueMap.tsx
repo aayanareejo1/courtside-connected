@@ -30,7 +30,7 @@ export function VenueMap({ areas, courts, width, height, highlightId, sponsorPin
   const plan = floorPlanUrl(floorPlan);
   const used = [...new Set(areas.map(a => areaFeature(a.kind, a.name)))];
   return (
-    <section aria-label={t.map.guide} className="overflow-hidden rounded-2xl border bg-card">
+    <section aria-label={t.map.guide} className="overflow-hidden rounded-lg border bg-card">
       <h2 className="border-b px-3 py-2 font-display text-lg font-bold uppercase">{t.map.guide}</h2>
       <TransformWrapper minScale={1} maxScale={5} doubleClick={{ mode: "zoomIn" }} pinch={{ step: 5 }} wheel={{ step: 0.15 }}>
         {({ zoomIn, zoomOut, resetTransform }) => (<>

@@ -16,18 +16,18 @@ export function HomeOverview({ data }: { data: EventData }) {
   const match = summary.next;
   const court = data.courts.find(c => c.id === match?.court_id);
   const teams = (m: EventData['matches'][number]) => `${data.teams.find(x => x.id === m.home_team_id)?.name ?? t.court.tbd} ${t.court.vs} ${data.teams.find(x => x.id === m.away_team_id)?.name ?? t.court.tbd}`;
-  return <section aria-label={t.demo.overview} className="space-y-3 border-b pb-4">
-    <div><h2 className="text-xl font-bold uppercase">{t.demo.now}</h2>
-      <p className="text-sm">{now === 0 ? t.search.loading : summary.current ? teams(summary.current) : t.demo.noCurrent}</p>
+  return <section aria-label={t.demo.overview} className="grid gap-5 sm:grid-cols-2">
+    <div className="overview-item"><h2 className="text-xl font-bold uppercase">{t.demo.now}</h2>
+      <p className="mt-2 text-sm text-muted-foreground">{now === 0 ? t.search.loading : summary.current ? teams(summary.current) : t.demo.noCurrent}</p>
     </div>
-    <div><h2 className="text-xl font-bold uppercase">{summary.personal ? t.demo.yourNext : t.demo.next}</h2>
-      {now === 0 ? <p className="text-sm">{t.search.loading}</p> : match ? <>
-        <p className="break-words text-sm font-semibold">{teams(match)}</p>
+    <div className="overview-item"><h2 className="text-xl font-bold uppercase">{summary.personal ? t.demo.yourNext : t.demo.next}</h2>
+      {now === 0 ? <p className="mt-2 text-sm text-muted-foreground">{t.search.loading}</p> : match ? <>
+        <p className="mt-2 break-words text-base font-semibold">{teams(match)}</p>
         <p className="flex flex-wrap items-center gap-x-3 text-sm">{court ? <Link className="tap inline-flex items-center text-primary underline" to="/courts/$courtId" params={{ courtId: court.id }}>{t.map.court} {court.label} · {court.areas?.name}</Link> : <span>{match.court_label_raw ?? t.schedule.courtUnknown}</span>}
           <span>{t.schedule.start} <MatchTime value={match.start_at} estimated={match.time_estimated} /></span>
           <span>{t.schedule.arrive} <MatchTime value={recommendedArrivalTime(match.start_at)} arrival /></span>
         </p>
-      </> : <p className="text-sm">{summary.personal ? t.schedule.noUpcoming : t.demo.noNext}</p>}
+      </> : <p className="mt-2 text-sm text-muted-foreground">{summary.personal ? t.schedule.noUpcoming : t.demo.noNext}</p>}
       {summary.personal && <Link to="/following" className="tap inline-flex items-center text-sm font-semibold text-primary underline">{t.schedule.title}</Link>}
     </div>
   </section>;
