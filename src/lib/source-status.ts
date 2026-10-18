@@ -16,3 +16,12 @@ export const PROVENANCES: readonly Provenance[] = ["live", "sample", "snapshot",
 export function asProvenance(value: string | null | undefined): Provenance {
   return PROVENANCES.includes(value as Provenance) ? (value as Provenance) : "sample";
 }
+
+// Real data is live only while its event day is today or later (Toronto time); earlier days are saved results.
+// Real data moved to a demo date is not real any more, so it is sample.
+export function realDataProvenance(eventDate: string | null | undefined, now: number, redated = false): Provenance {
+  if (redated) return "sample";
+  if (!eventDate) return "live";
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Toronto" }).format(now);
+  return eventDate < today ? "snapshot" : "live";
+}

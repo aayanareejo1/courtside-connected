@@ -24,3 +24,9 @@
 - Item 12 (staff): aayanareejo@gmail.com invited and granted staff. Publish/delete test pending first sign-in.
 - Phase 1 checks: axe found 0 violations on /, /search, /following, /info, /sponsors, 404; no horizontal scroll at 390px. /auth and the staff form still need a signed-in pass.
 - Phase 2 (AI assistant): see plan agreed with the team before building.
+
+## Real source adapters (branch real_sources)
+- MyTeam: `mapMyteam` (pure, tested). Live only when the source config has `schedule_id`. Pairs become initials. Past dates are labelled snapshot, re-dated data is labelled sample.
+- AES: `mapAesSchedule` (pure, tested). Live only when config has `schedule_dates`; never deletes rows. Server requests currently get HTTP 403, so it stays off until OVA authorizes access.
+- TIMU: provenance now follows the data date (past is snapshot, re-dated is sample).
+- Config switches live in `supabase/real-sources-config.sql`. These are undocumented public endpoints; get OVA authorization before relying on them.

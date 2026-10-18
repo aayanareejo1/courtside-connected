@@ -26,7 +26,7 @@ export async function applySync(db: Db, sourceId: string, result: AdapterResult)
   const teamId = byName(teams, "name");
   const courtId = byName(courts, "label");
   const divId = byName(divisions, "name");
-  if (result.createMissingTeams) {
+  if (result.createMissingTeams !== undefined) {
     const division_id = divId.get(result.createMissingTeams) ?? null;
     const missing = [...new Set((result.matches ?? []).flatMap((m) => [m.home, m.away]))].filter((n) => !teamId.has(n));
     if (missing.length) for (const t of must(await db.from("teams").insert(missing.map((name) => ({ name, division_id }))).select("id,name"))) teamId.set(t.name, t.id);
