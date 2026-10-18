@@ -1,3 +1,4 @@
+import { MatchTime, MatchScore } from "@/components/MatchDetails";
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Video } from "lucide-react";
@@ -5,7 +6,7 @@ import { VenueMap, type MapArea, type MapCourt } from "@/components/VenueMap";
 import { SourceBadges } from "@/components/SourceBadges";
 import type { MatchSource } from "@/lib/source-status";
 import { courtSchedule, courtsByNumber, hasMapPosition, type CourtMatch } from "@/lib/court-schedule";
-import { eventTime, eventDateLabel } from "@/lib/schedule";
+import { eventDateLabel } from "@/lib/schedule";
 import { t } from "@/lib/i18n";
 
 export type CourtScreenMatch = CourtMatch & { source_id?: string | null; time_estimated?: boolean;
@@ -26,7 +27,7 @@ export function CourtScreen({ court, courts, areas, venue, matches, sources, sav
       <input id="court-number" type="search" inputMode="numeric" value={number} onChange={e => setNumber(e.target.value)} placeholder={t.court.number}
         className="tap w-full min-w-0 rounded-lg border bg-background px-3 py-2 text-base" />
       <nav aria-label={t.map.listTitle} className="mt-2">
-        <ul className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+        <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {found.map(c => <li key={c.id} className="min-w-0"><Link to="/courts/$courtId" params={{ courtId: c.id }} aria-current={c.id === court.id ? "page" : undefined}
             className={`tap flex items-center justify-center rounded-lg border px-2 py-2 text-center font-semibold ${c.id === court.id ? "border-primary bg-primary text-primary-foreground" : "bg-card"}`}>
             <span className="min-w-0 break-words">{t.map.court} {c.label}</span>
@@ -44,7 +45,7 @@ export function CourtScreen({ court, courts, areas, venue, matches, sources, sav
       {hasMapPosition(court) ? <VenueMap key={court.id} areas={areas} courts={courts} width={venue.plan_width} height={venue.plan_height} highlightId={court.id} />
         : <p className="text-sm text-muted-foreground">{t.court.noPosition}</p>}
     </section>
-    {court.stream_url && <a href={court.stream_url} target="_blank" rel="noreferrer" className="tap flex items-center justify-center gap-2 rounded-xl bg-destructive p-3 font-semibold text-destructive-foreground"><Video className="h-5 w-5 shrink-0" aria-hidden />{t.court.watch}</a>}
+    {court.stream_url && <a href={court.stream_url} target="_blank" rel="noreferrer" className="tap flex items-center justify-center gap-2 rounded-lg bg-destructive p-3 font-semibold text-destructive-foreground"><Video className="h-5 w-5 shrink-0" aria-hidden />{t.court.watch}</a>}
     <SourceBadges matches={matches} sources={sources} savedAt={savedAt} />
     <p className="text-sm text-muted-foreground">{t.schedule.timezone}</p>
     <section aria-label={schedule.current ? t.court.now : t.court.next}>
@@ -64,13 +65,13 @@ export function CourtScreen({ court, courts, areas, venue, matches, sources, sav
 
 function MatchRow({ m }: { m: CourtScreenMatch }) {
   const r = Array.isArray(m.results) ? m.results[0] : m.results;
-  return <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-xl bg-card p-3">
+  return <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg bg-card p-3">
     <div className="min-w-0">
       <p className="text-xs text-muted-foreground">{eventDateLabel(m.start_at)}</p>
-      <time dateTime={m.start_at} className="font-display text-xl font-bold">{eventTime(m.start_at)}</time>
+      <MatchTime value={m.start_at} estimated={m.time_estimated} className="font-display text-xl font-bold" />
       {m.time_estimated && <span className="ml-2 text-xs text-muted-foreground">{t.schedule.estimatedShort}</span>}
       <p className="mt-1 break-words text-sm">{m.home?.name ?? t.court.tbd} <span className="text-muted-foreground">{t.court.vs}</span> {m.away?.name ?? t.court.tbd}</p>
     </div>
-    {r ? <span className="shrink-0 font-display text-lg font-bold">{r.home_sets}–{r.away_sets}</span> : m.status === 'final' ? <span className="max-w-24 text-xs text-muted-foreground">{t.schedule.resultPending}</span> : null}
+    {r ? <MatchScore home={m.home?.name ?? t.court.tbd} away={m.away?.name ?? t.court.tbd} homeSets={r.home_sets} awaySets={r.away_sets} final={m.status === "final"} className="shrink-0 font-display text-lg font-bold" /> : m.status === 'final' ? <span className="max-w-24 text-xs text-muted-foreground">{t.schedule.resultPending}</span> : null}
   </div>;
 }

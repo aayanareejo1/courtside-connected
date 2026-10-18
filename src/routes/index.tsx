@@ -1,3 +1,5 @@
+import { HomeOverview } from "@/components/HomeOverview";
+import { eventDataQuery } from "@/lib/event-data";
 import { SourceBadges } from "@/components/SourceBadges";
 import { ScheduleSkeleton } from "@/components/ScheduleSkeleton";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -30,7 +32,7 @@ function HomeMap() {
 }
 
 export const Route = createFileRoute("/")({
-  loader: async ({ context }) => { await Promise.all([context.queryClient.ensureQueryData(eventContentQuery), context.queryClient.ensureQueryData(venueQuery)]); },
+  loader: async ({ context }) => { await Promise.all([context.queryClient.ensureQueryData(eventContentQuery), context.queryClient.ensureQueryData(venueQuery), context.queryClient.ensureQueryData(eventDataQuery)]); },
   head: () => ({ meta: [
     { title: "Courtside Connected — OVA participant companion" },
     { name: "description", content: "Find players, teams, courts and venue information at Ontario Volleyball Association events." },
@@ -47,18 +49,20 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   const { data } = useSuspenseQuery(eventContentQuery);
+  const { data: directory } = useSuspenseQuery(eventDataQuery);
   const { event } = data;
   const venue = event.venues as unknown as { name: string; courts: { count: number }[] } | null;
 
   return (
     <div className="space-y-6">
-      <section className="bg-ink p-5 text-ink-foreground">
+      <section className="bg-ink p-3 text-ink-foreground">
         <p className="text-sm uppercase tracking-widest text-accent">{venue?.name}</p>
-        <h1 className="mt-1 text-4xl font-bold uppercase leading-none">{event.name}</h1>
+        <h1 className="mt-1 text-2xl font-bold uppercase leading-tight">{event.name}</h1>
         <p className="mt-2 text-sm opacity-80">{event.starts_on} – {event.ends_on} · {venue?.courts?.[0]?.count ?? 0} {t.home.courts}</p>
       </section>
 
-      <div className="grid grid-cols-2 gap-3">
+      <HomeOverview data={directory} />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Button asChild className="h-auto min-h-12 whitespace-normal"><Link to="/search" search={{ q: "" }}><Search className="shrink-0" aria-hidden />{t.home.findPeople}</Link></Button>
         <Button asChild variant="outline" className="h-auto min-h-12 whitespace-normal"><Link to="/info"><MapPin className="shrink-0" aria-hidden />{t.home.findPlaces}</Link></Button>
       </div>

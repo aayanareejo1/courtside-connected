@@ -22,3 +22,5 @@
 - Court match reads reuse the event-directory device cache and canonical teams. Why: last-known court schedules survive cold offline navigation.
 
 - Court schedules use a pure time-aware selector for current-or-next plus three later matches; map markers require finite in-range coordinates and court navigation stays available as a numbered list. Why: missing positions never break schedule discovery on phones.
+
+- Home summarizes canonical current/next matches with device follows and honest list-level provenance; shared match time/score elements expose team-aware scores and Toronto dates to assistive technology. Why: the phone overview and screen-reader detail stay consistent without inventing live activity.
