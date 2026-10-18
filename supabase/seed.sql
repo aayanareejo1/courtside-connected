@@ -9,7 +9,7 @@ insert into public.sources (kind, name, config) values
  ('aes','AES (event check, mock statuses)','{"event_key":"MjAyNl9PbnRhcmlvX0NoYW1waW9uc2hpcHNfX19FdmVudF8yX182djZHX19UTFNHX18xNVVCXw2"}'),
  ('speer','Speer rosters (mock CSV)','{}'),
  ('myteam','MyTeam.click (snapshot)','{}'),
- ('timu','TIMU.ca (sample tournament tid 3960)','{"division":"15U Girls","live_tid":"3960","court_map":{"1":"5","2":"9","3":"13"},"event_date":"2026-04-19"}');
+ ('timu','TIMU.ca (sample results)','{"division":"15U Girls"}');
 
 insert into public.venues (name, address, plan_width, plan_height)
 values ('Enercare Centre', '100 Princes'' Blvd, Toronto, ON M6K 3C3', 1000, 330);
@@ -74,13 +74,6 @@ select c.id, d.id, t.team from (values
 ) t(club,div,team)
 join public.clubs c on c.name = t.club join public.divisions d on d.name = t.div;
 
--- Teams from the TIMU sample tournament (no club records in the source).
-insert into public.teams (division_id, name)
-select d.id, t.name from public.divisions d, (values
- ('Pakmen Gold Andrea'),('Milton Edge Thunder'),('EVP Eagles Rise'),('Jr Gryphons Fireballs'),('MVC Blackcomb'),
- ('Defensa EC'),('Niagara Rapids Wild'),('Hurricanes Category 3 Blue'),('FCVC Evergreen')
-) t(name) where d.name = '15U Girls';
-
 -- Beach pairs from the MyTeam.click snapshot: initials only.
 insert into public.teams (division_id, name, external_refs)
 select d.id, t.name, '{"pool":"","source":"myteam.click"}'::jsonb from public.divisions d, (values
@@ -129,7 +122,8 @@ select t.id, s.n, s.r from (values
  ('Lakeshore Storm 13U','Coach Tom W.','Head Coach'),('Lakeshore Storm 13U','Coach Marc K.','Assistant Coach')
 ) s(team,n,r) join public.teams t on t.name = s.team;
 
--- Matches: start times are UTC (Toronto is UTC-4 in April). TIMU rows are estimated round times.
+-- Beach rows are a demo schedule for the MyTeam pairs (initials only, snapshot data).
+-- Matches: start times are UTC (Toronto is UTC-4 in April). TIMU rows are the sample results fixture (exact fictional times).
 insert into public.matches (event_day_id, division_id, court_id, court_label_raw, start_at, est_duration_min, home_team_id, away_team_id, status, source_id, external_id, pool, time_estimated)
 select ed.id, ht.division_id, c.id, 'Court ' || m.court, m.t::timestamptz, 60, ht.id, at.id, m.status, s.id, m.ext, m.pool, m.est
 from (values
@@ -139,27 +133,24 @@ from (values
  ('A-2004','aes','2026-04-20T16:00:00Z','13','Toronto Skyline 15U Blue','Ottawa Peaks 15U Red','scheduled',null,false),
  ('A-2005','aes','2026-04-20T17:30:00Z','17','Kingston Tide 13U','Toronto Skyline 13U White','scheduled',null,false),
  ('A-2006','aes','2026-04-20T18:30:00Z','20','Lakeshore Storm 13U','Kingston Tide 13U','scheduled',null,false),
- ('timu-1000','timu','2026-04-19T13:00:00Z','5','Pakmen Gold Andrea','Milton Edge Thunder','final','Pool A',true),
- ('timu-1001','timu','2026-04-19T13:00:00Z','9','EVP Eagles Rise','Jr Gryphons Fireballs','final','Pool B',true),
- ('timu-1002','timu','2026-04-19T13:00:00Z','13','MVC Blackcomb','Defensa EC','final','Pool C',true),
- ('timu-1003','timu','2026-04-19T14:00:00Z','5','Niagara Rapids Wild','Milton Edge Thunder','final','Pool A',true),
- ('timu-1004','timu','2026-04-19T14:00:00Z','9','Hurricanes Category 3 Blue','Jr Gryphons Fireballs','final','Pool B',true),
- ('timu-1005','timu','2026-04-19T14:00:00Z','13','FCVC Evergreen','Defensa EC','final','Pool C',true),
- ('timu-1006','timu','2026-04-19T15:00:00Z','5','Pakmen Gold Andrea','Niagara Rapids Wild','final','Pool A',true),
- ('timu-1007','timu','2026-04-19T15:00:00Z','9','EVP Eagles Rise','Hurricanes Category 3 Blue','final','Pool B',true),
- ('timu-1008','timu','2026-04-19T15:00:00Z','13','MVC Blackcomb','FCVC Evergreen','final','Pool C',true),
- ('timu-1009','timu','2026-04-19T16:00:00Z','5','EVP Eagles Rise','Niagara Rapids Wild','final',null,true),
- ('timu-1010','timu','2026-04-19T16:00:00Z','9','MVC Blackcomb','Hurricanes Category 3 Blue','final',null,true),
- ('timu-1011','timu','2026-04-19T16:00:00Z','13','Jr Gryphons Fireballs','Defensa EC','final',null,true),
- ('timu-1012','timu','2026-04-19T17:00:00Z','5','Pakmen Gold Andrea','Jr Gryphons Fireballs','final',null,true),
- ('timu-1013','timu','2026-04-19T17:00:00Z','9','FCVC Evergreen','Milton Edge Thunder','final',null,true),
- ('timu-1014','timu','2026-04-19T17:00:00Z','13','Niagara Rapids Wild','Defensa EC','final',null,true),
- ('timu-1015','timu','2026-04-19T18:00:00Z','5','MVC Blackcomb','Pakmen Gold Andrea','final',null,true),
- ('timu-1016','timu','2026-04-19T18:00:00Z','9','EVP Eagles Rise','FCVC Evergreen','final',null,true),
- ('timu-1017','timu','2026-04-19T18:00:00Z','13','Hurricanes Category 3 Blue','Jr Gryphons Fireballs','final',null,true),
- ('timu-1018','timu','2026-04-19T19:00:00Z','13','Niagara Rapids Wild','Milton Edge Thunder','final',null,true),
- ('timu-1019','timu','2026-04-19T19:00:00Z','9','MVC Blackcomb','FCVC Evergreen','final',null,true),
- ('timu-1020','timu','2026-04-19T19:00:00Z','5','Pakmen Gold Andrea','EVP Eagles Rise','final',null,true)
+ ('B-3001','myteam','2026-04-21T14:00:00Z','5','E.E. / J.R.','L.K. / S.M.','scheduled','Pool A',false),
+ ('B-3002','myteam','2026-04-21T14:00:00Z','9','N.Z. / L.Z.','M.K. / J.B.','scheduled','Pool A',false),
+ ('B-3003','myteam','2026-04-21T14:00:00Z','13','M.P. / R.C.','V.M. / A.U.','scheduled','Pool B',false),
+ ('B-3004','myteam','2026-04-21T15:15:00Z','5','M.N. / V.V.','Y.S. / S.V.','scheduled','Pool B',false),
+ ('B-3005','myteam','2026-04-21T15:15:00Z','9','I.M. / M.S.','L.M. / J.K.','scheduled','Pool C',false),
+ ('B-3006','myteam','2026-04-21T15:15:00Z','13','E.T. / S.B.','H.M. / V.M.','scheduled','Pool C',false),
+ ('T-1001','timu','2026-04-19T14:00:00Z','5','Toronto Skyline 15U Blue','Ottawa Peaks 15U Red','final','Pool B',false),
+ ('T-1002','timu','2026-04-19T15:30:00Z','20','Lakeshore Storm 13U','Kingston Tide 13U','final','Pool A',false),
+ ('T-1003','timu','2026-04-19T16:00:00Z','9','Hamilton Harbour 15U','London Lightning 15U Gold','final','Pool B',false),
+ ('T-1004','timu','2026-04-19T17:00:00Z','13','Toronto Skyline 15U Blue','Hamilton Harbour 15U','final','Pool B',false),
+ ('T-1005','timu','2026-04-19T18:00:00Z','23','Toronto Skyline 13U White','Ottawa Peaks 13U Blue','final','Pool A',false),
+ ('T-1006','timu','2026-04-19T19:00:00Z','17','Lakeshore Storm 13U','Toronto Skyline 13U White','final','Pool A',false),
+ ('T-1007','timu','2026-04-19T20:00:00Z','20','Kingston Tide 13U','Ottawa Peaks 13U Blue','final','Pool A',false),
+ ('T-1008','timu','2026-04-19T21:00:00Z','23','Toronto Skyline 13U White','Kingston Tide 13U','final','Pool A',false),
+ ('T-1009','timu','2026-04-19T21:00:00Z','17','Lakeshore Storm 13U','Ottawa Peaks 13U Blue','final','Pool A',false),
+ ('T-1010','timu','2026-04-19T20:00:00Z','5','London Lightning 15U Gold','Ottawa Peaks 15U Red','final','Pool B',false),
+ ('T-1011','timu','2026-04-19T21:00:00Z','9','London Lightning 15U Gold','Toronto Skyline 15U Blue','final','Pool B',false),
+ ('T-1012','timu','2026-04-19T21:00:00Z','13','Hamilton Harbour 15U','Ottawa Peaks 15U Red','final','Pool B',false)
 ) m(ext,kind,t,court,home,away,status,pool,est)
 join public.sources s on s.kind = m.kind
 join public.event_days ed on ed.date = (m.t::timestamptz at time zone 'America/Toronto')::date
@@ -169,13 +160,18 @@ join public.teams at on at.name = m.away;
 
 insert into public.results (match_id, home_sets, away_sets, set_scores)
 select m.id, r.h, r.a, r.s::jsonb from public.matches m join (values
- ('timu-1000',2,1,'[[23,25],[25,20],[15,8]]'),('timu-1001',2,0,'[[25,10],[25,8]]'),('timu-1002',2,0,'[[25,7],[26,24]]'),
- ('timu-1003',0,2,'[[21,25],[15,25]]'),('timu-1004',2,1,'[[19,25],[25,18],[18,16]]'),('timu-1005',2,0,'[[25,15],[25,12]]'),
- ('timu-1006',2,0,'[[25,8],[25,12]]'),('timu-1007',2,0,'[[25,16],[25,12]]'),('timu-1008',0,2,'[[18,25],[19,25]]'),
- ('timu-1009',2,0,'[[25,16],[25,16]]'),('timu-1010',2,1,'[[25,19],[21,25],[15,10]]'),('timu-1011',2,0,'[[25,22],[28,26]]'),
- ('timu-1012',2,0,'[[25,9],[25,11]]'),('timu-1013',2,0,'[[25,21],[27,25]]'),('timu-1014',2,1,'[[25,9],[23,25],[15,12]]'),
- ('timu-1015',0,2,'[[17,25],[22,25]]'),('timu-1016',2,0,'[[28,26],[25,13]]'),('timu-1017',2,1,'[[25,21],[19,25],[15,8]]'),
- ('timu-1018',0,2,'[[23,25],[18,25]]'),('timu-1019',2,0,'[[33,31],[25,16]]'),('timu-1020',2,0,'[[25,14],[25,16]]')
+ ('T-1001',2,0,'[[25,18],[25,20]]'),
+ ('T-1002',1,2,'[[25,23],[19,25],[12,15]]'),
+ ('T-1003',2,0,'[[25,21],[25,19]]'),
+ ('T-1004',2,1,'[[22,25],[25,17],[15,11]]'),
+ ('T-1005',2,0,'[[25,16],[25,22]]'),
+ ('T-1006',2,1,'[[20,25],[25,23],[15,9]]'),
+ ('T-1007',2,0,'[[25,21],[25,17]]'),
+ ('T-1008',1,2,'[[25,22],[20,25],[11,15]]'),
+ ('T-1009',2,1,'[[23,25],[25,19],[15,13]]'),
+ ('T-1010',0,2,'[[18,25],[22,25]]'),
+ ('T-1011',1,2,'[[25,20],[21,25],[13,15]]'),
+ ('T-1012',2,0,'[[25,23],[26,24]]')
 ) r(ext,h,a,s) on r.ext = m.external_id;
 
 insert into public.announcements (event_id, title, body, severity, published)
