@@ -69,6 +69,9 @@ export async function applySync(db: Db, sourceId: string, result: AdapterResult)
     const idByExt = new Map(saved.map((s) => [s.external_id, s.id]));
     const results = matchRows.filter((m) => m.result).map((m) => ({ match_id: idByExt.get(m.row.external_id)!, ...m.result!, updated_at: new Date().toISOString() }));
     if (results.length) must(await db.from("results").upsert(results, { onConflict: "match_id" }));
+    // A match the source now reports without a result must not keep an old score.
+    const cleared = matchRows.filter((m) => !m.result).map((m) => idByExt.get(m.row.external_id)!);
+    if (cleared.length) must(await db.from("results").delete().in("match_id", cleared));
     rows += saved.length;
     if (result.replaceSourceMatches) {
       const stale = must(await db.from("matches").select("id,external_id").eq("source_id", sourceId)).filter((m) => !idByExt.has(m.external_id)).map((m) => m.id);

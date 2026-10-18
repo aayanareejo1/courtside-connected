@@ -39,3 +39,10 @@
 - AES: `mapAesSchedule` (pure, tested). Live only when config has `schedule_dates`; never deletes rows. Server requests currently get HTTP 403, so it stays off until OVA authorizes access.
 - TIMU: provenance now follows the data date (past is snapshot, re-dated is sample).
 - Config switches live in `supabase/real-sources-config.sql`. These are undocumented public endpoints; get OVA authorization before relying on them.
+
+## Demo clock, calendar logic and Ask Courtside (branch app_logic)
+- `?demo=1` starts an app clock at 12:30 PM on April 19 2026 (Toronto) that then runs forward; `?demo=0` turns it off. All fan facing "now" values use `appNow()`. Source health still uses real time.
+- `src/lib/calendar.ts`: `buildCalendar` (days, leave by, clash and tight turnaround flags, priority) and `toIcs` / `downloadIcs`. Screens only render this.
+- `POST /api/public/ask` (Ask Courtside): reads canonical event data, sends a short facts block to Claude, falls back to a basic answer without `ANTHROPIC_API_KEY` or on failure. Set the key as a server secret only.
+- Sample TIMU day one now has finished, live and upcoming matches that fit the demo clock. A sync that reports no result for a match removes any old score.
+- Planned, not built: leave by push notifications.

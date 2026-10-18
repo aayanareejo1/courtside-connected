@@ -1,3 +1,4 @@
+import { appNow } from "@/lib/clock";
 import { TargetedAnnouncements } from "@/components/TargetedAnnouncements";
 import { ScheduleSkeleton } from "@/components/ScheduleSkeleton";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
@@ -34,8 +35,8 @@ export function CourtPage() {
   const { courtId } = Route.useParams();
   const { data: v } = useSuspenseQuery(venueQuery);
   const { data: matches } = useSuspenseQuery(courtMatchesQuery(courtId));
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 30_000); return () => clearInterval(timer); }, []);
+  const [now, setNow] = useState(() => appNow());
+  useEffect(() => { const timer = setInterval(() => setNow(appNow()), 30_000); return () => clearInterval(timer); }, []);
   const court = v.courts.find(c => c.id === courtId);
   if (!court) return <p role="alert">{t.court.notFound}</p>;
   return <div className="min-w-0 space-y-5">

@@ -1,3 +1,4 @@
+import { appNow } from "@/lib/clock";
 import { TargetedAnnouncements } from "@/components/TargetedAnnouncements";
 import { ScheduleSkeleton } from "@/components/ScheduleSkeleton";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -34,7 +35,7 @@ function FollowingPage() {
   const { data } = useSuspenseQuery(eventDataQuery);
   const { follows } = useFollows();
   const [now, setNow] = useState(0);
-  useEffect(() => { setNow(Date.now()); const timer = setInterval(() => setNow(Date.now()), 30_000); return () => clearInterval(timer); }, []);
+  useEffect(() => { setNow(appNow()); const timer = setInterval(() => setNow(appNow()), 30_000); return () => clearInterval(timer); }, []);
   const teams = data.teams.filter((team) => follows.some((f) => f.type === "team" && f.id === team.id));
   const players = data.players.filter((player) => follows.some((f) => f.type === "player" && f.id === player.id));
   const matches = followedMatches(data.matches, data.players, follows);
