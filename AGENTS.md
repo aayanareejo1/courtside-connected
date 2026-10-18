@@ -30,3 +30,6 @@
 - Ask Courtside receives the last three exchanges and resolves "my", "me" and follow ups to the player or team named earlier (never for sponsor, hotel, merchandise, 50/50 or directions questions); a named player or team always gets a full profile (team, division, club, coaches, record, every match with court, hall and arrival time). Why: a fan can talk to it naturally and still get one complete answer.
 - Venue directions come from one pure helper (Google Maps and Apple Maps links built from the venue name and address); the team page shares through the phone share sheet or copies the link. Why: no map or share vendor needed.
 
+
+- Calendar presentation reuses columns from buildCalendar conflict IDs and offers an in-memory agenda/day toggle; no screen recomputes leave times, ends or conflicts. Why: crowded schedules stay readable without altering event rules.
+- The Venue route owns the full venue guide, directions, parking and food; Home and Info link there, while courts keep a highlighted location preview. Why: venue information has one discoverable destination without losing court context.

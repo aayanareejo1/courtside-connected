@@ -19,9 +19,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 export const Route = createFileRoute("/following")({
   loader: ({ context }) => context.queryClient.ensureQueryData(eventDataQuery),
   head: () => ({ meta: [
-    { title: "My schedule — Courtside Connected" },
+    { title: "My schedule - OVAchamps" },
     { name: "description", content: "Combined followed-team schedule, arrival times and cross-court clash warnings at OVA events." },
-    { property: "og:title", content: "My schedule — Courtside Connected" },
+    { property: "og:title", content: "My schedule - OVAchamps" },
     { property: "og:description", content: "Your followed players and teams, with arrival times and schedule clash warnings." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
   ] }),
@@ -53,7 +53,7 @@ function FollowingPage() {
       <TabsContent value="results"><FollowedSchedule data={data} matches={results} results /></TabsContent>
       <TabsContent value="saved" className="space-y-6">
     {teams.length > 0 && <section><h2 className="text-2xl font-bold uppercase">{t.follow.teams}</h2><ul className="mt-2 space-y-2">{teams.map((team) => <li key={team.id} className="flex items-center gap-3 rounded-lg bg-card p-3"><Link className="min-w-0 flex-1 font-semibold" to="/teams/$teamId" params={{ teamId: team.id }}>{team.name}</Link><FollowButton item={{ type: "team", id: team.id }} name={team.name} /></li>)}</ul></section>}
-    {players.length > 0 && <section><h2 className="text-2xl font-bold uppercase">{t.follow.players}</h2><ul className="mt-2 space-y-2">{players.map((p) => <li key={p.id} className="flex items-center gap-3 rounded-lg bg-card p-3"><Link className="min-w-0 flex-1" to="/teams/$teamId" params={{ teamId: p.team_id }}><p className="font-semibold">{playerName(p.display_name)} · #{p.jersey_number ?? "—"}</p><p className="text-sm text-muted-foreground">{data.teams.find((team) => team.id === p.team_id)?.name}</p></Link><FollowButton item={{ type: "player", id: p.id }} name={playerName(p.display_name)} /></li>)}</ul></section>}
+    {players.length > 0 && <section><h2 className="text-2xl font-bold uppercase">{t.follow.players}</h2><ul className="mt-2 space-y-2">{players.map((p) => <li key={p.id} className="flex items-center gap-3 rounded-lg bg-card p-3"><Link className="min-w-0 flex-1" to="/teams/$teamId" params={{ teamId: p.team_id }}><p className="font-semibold">{playerName(p.display_name)} · #{p.jersey_number ?? "-"}</p><p className="text-sm text-muted-foreground">{data.teams.find((team) => team.id === p.team_id)?.name}</p></Link><FollowButton item={{ type: "player", id: p.id }} name={playerName(p.display_name)} /></li>)}</ul></section>}
       </TabsContent></Tabs>}
   </div>;
 }

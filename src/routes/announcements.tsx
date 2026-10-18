@@ -9,9 +9,9 @@ import { t } from "@/lib/i18n";
 export const Route = createFileRoute("/announcements")({
   loader: async ({ context }) => { await context.queryClient.ensureQueryData(eventContentQuery); },
   head: () => ({ meta: [
-    { title: "Announcements — Courtside Connected" },
+    { title: "Announcements - OVAchamps" },
     { name: "description", content: "Every staff announcement for this event, urgent first." },
-    { property: "og:title", content: "Announcements — Courtside Connected" },
+    { property: "og:title", content: "Announcements - OVAchamps" },
     { property: "og:description", content: "Every staff announcement for this event, urgent first." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
   ] }),

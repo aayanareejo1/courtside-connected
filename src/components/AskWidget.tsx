@@ -1,4 +1,4 @@
-// Floating Ask Courtside chat, bottom right on every screen. The conversation stays while the panel is closed.
+// Floating Ask OVAchamps chat, bottom right on every screen. The conversation stays while the panel is closed.
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { MessageCircle, X } from "lucide-react";
@@ -33,16 +33,16 @@ export function AskWidget() {
   }, [open]);
 
   return <>
-    <div ref={panel} id="ask-panel" role="dialog" aria-label="Ask Courtside" hidden={!open}
-      className="fixed bottom-36 right-4 z-40 flex max-h-[min(70dvh,34rem)] w-[min(calc(100vw-2rem),24rem)] flex-col overflow-hidden rounded-lg border bg-card shadow-xl">
+    <div ref={panel} id="ask-panel" role="dialog" aria-label="Ask OVAchamps" hidden={!open}
+      className="fixed bottom-20 right-4 z-40 flex max-h-[min(70dvh,34rem)] w-[min(calc(100vw-2rem),24rem)] flex-col overflow-hidden rounded-lg border bg-card shadow-xl">
       <div className="flex items-center justify-between border-b bg-ink px-4 py-2 text-ink-foreground">
-        <h2 className="flex items-center gap-2 font-display text-lg font-bold uppercase"><MessageCircle className="h-5 w-5" aria-hidden />Ask Courtside</h2>
-        <Button type="button" onClick={() => { setOpen(false); button.current?.focus(); }} aria-label="Close Ask Courtside" className="tap inline-flex h-11 w-11 items-center justify-center rounded-md"><X className="h-5 w-5" aria-hidden /></Button>
+        <h2 className="flex items-center gap-2 font-display text-lg font-bold uppercase"><MessageCircle className="h-5 w-5" aria-hidden />Ask OVAchamps</h2>
+        <Button type="button" onClick={() => { setOpen(false); button.current?.focus(); }} aria-label="Close Ask OVAchamps" className="tap inline-flex h-11 w-11 items-center justify-center rounded-md"><X className="h-5 w-5" aria-hidden /></Button>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto p-3"><AskCourtside trigger={trigger} /></div>
     </div>
     <Button ref={button} type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-controls="ask-panel"
-      className="tap fixed bottom-20 right-4 z-40 inline-flex h-14 items-center gap-2 rounded-lg bg-primary px-5 font-semibold text-primary-foreground shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+      className="tap inline-flex h-11 items-center gap-2 rounded-lg bg-primary px-3 font-semibold text-primary-foreground shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
       {open ? <X className="h-6 w-6" aria-hidden /> : <MessageCircle className="h-6 w-6" aria-hidden />}<span>{open ? "Close" : "Ask"}</span>
     </Button>
   </>;

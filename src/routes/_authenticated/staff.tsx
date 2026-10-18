@@ -12,9 +12,9 @@ import { t } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/staff")({
   head: () => ({ meta: [
-    { title: "Post an announcement · Courtside Connected" },
+    { title: "Post an announcement · OVAchamps" },
     { name: "description", content: "OVA staff post event announcements for participants." },
-    { property: "og:title", content: "Post an announcement · Courtside Connected" },
+    { property: "og:title", content: "Post an announcement · OVAchamps" },
     { property: "og:description", content: "OVA staff post event announcements for participants." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
     { name: "robots", content: "noindex" },

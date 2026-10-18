@@ -20,9 +20,9 @@ export const Route = createFileRoute("/teams/$teamId")({
     return { name: team.name };
   },
   head: ({ loaderData }) => ({ meta: [
-    { title: `${loaderData?.name ?? "Team unavailable"} — Courtside Connected` },
+    { title: `${loaderData?.name ?? "Team unavailable"} - OVAchamps` },
     { name: "description", content: "Team schedule, match results and privacy-safe roster at OVA events." },
-    { property: "og:title", content: `${loaderData?.name ?? "Team unavailable"} — Courtside Connected` },
+    { property: "og:title", content: `${loaderData?.name ?? "Team unavailable"} - OVAchamps` },
     { property: "og:description", content: "Follow this team and see its schedule, results and roster." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
     ...(!loaderData ? [{ name: "robots", content: "noindex" }] : []),
@@ -59,7 +59,7 @@ function TeamPage() {
     <SourceBadges matches={matches} sources={data.sources} savedAt={data.offlineSavedAt} />
     <section><h2 className="text-2xl font-bold uppercase">{t.team.schedule}</h2>{schedule.length ? renderMatches(schedule) : <p className="mt-2 text-muted-foreground">{t.team.noMatches}</p>}</section>
     {results.length > 0 && <section><h2 className="text-2xl font-bold uppercase">{t.team.results}</h2>{renderMatches(results)}</section>}
-    <section><h2 className="text-2xl font-bold uppercase">{t.team.roster}</h2>{players.length ? <ul className="mt-2 space-y-2">{players.map((p) => <li key={p.id} className="flex items-center gap-3 rounded-lg bg-card p-3"><span className="w-10 shrink-0 font-display text-2xl font-bold text-primary" aria-label={`${t.team.jersey} ${p.jersey_number ?? "—"}`}>#{p.jersey_number ?? "—"}</span><span className="min-w-0 flex-1 font-semibold">{playerName(p.display_name)}</span><FollowButton item={{ type: "player", id: p.id }} name={playerName(p.display_name)} /></li>)}</ul> : <p className="mt-2 text-muted-foreground">{t.team.noPlayers}</p>}</section>
+    <section><h2 className="text-2xl font-bold uppercase">{t.team.roster}</h2>{players.length ? <ul className="mt-2 space-y-2">{players.map((p) => <li key={p.id} className="flex items-center gap-3 rounded-lg bg-card p-3"><span className="w-10 shrink-0 font-display text-2xl font-bold text-primary" aria-label={`${t.team.jersey} ${p.jersey_number ?? "-"}`}>#{p.jersey_number ?? "-"}</span><span className="min-w-0 flex-1 font-semibold">{playerName(p.display_name)}</span><FollowButton item={{ type: "player", id: p.id }} name={playerName(p.display_name)} /></li>)}</ul> : <p className="mt-2 text-muted-foreground">{t.team.noPlayers}</p>}</section>
     {staff.length > 0 && <section><h2 className="text-2xl font-bold uppercase">{t.team.staff}</h2><ul className="mt-2 divide-y">{staff.map((person) => <li key={person.id} className="flex justify-between gap-3 py-3"><span>{person.display_name}</span><span className="text-sm text-muted-foreground">{person.role}</span></li>)}</ul></section>}
   </div>;
 }

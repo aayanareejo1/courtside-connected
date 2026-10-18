@@ -14,7 +14,7 @@ const reply = (status: number, body: unknown) => vi.fn(async () => new Response(
 const send = (q: string) => { fireEvent.change(screen.getByLabelText("Your question"), { target: { value: q } }); fireEvent.click(screen.getByRole("button", { name: "Send question" })); };
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); localStorage.clear(); });
 
-describe("Ask Courtside screen", () => {
+describe("Ask OVAchamps screen", () => {
   it("shows the intro and four starter chips", () => {
     render(<AskCourtside />);
     expect(screen.getByText(ASK_INTRO)).toBeTruthy();
@@ -50,16 +50,16 @@ describe("Ask Courtside screen", () => {
     vi.stubGlobal("fetch", vi.fn(() => new Promise<Response>((r) => { resolve = r; })));
     render(<AskCourtside />);
     send("hello");
-    expect(screen.getByRole("status", { name: "Ask Courtside is typing" })).toBeTruthy();
+    expect(screen.getByRole("status", { name: "Ask OVAchamps is typing" })).toBeTruthy();
     resolve(new Response(JSON.stringify({ answer: "Done", links: [], mode: "ai" }), { status: 200 }));
     await screen.findByText("Done");
-    expect(screen.queryByRole("status", { name: "Ask Courtside is typing" })).toBeNull();
+    expect(screen.queryByRole("status", { name: "Ask OVAchamps is typing" })).toBeNull();
   });
 
   it.each([
     [429, "Please wait a minute and try again."],
     [400, "Please ask a shorter question (300 characters or fewer)."],
-    [503, "Ask Courtside is busy right now. Please try again shortly."],
+    [503, "Ask OVAchamps is busy right now. Please try again shortly."],
   ])("shows a friendly message for HTTP %i", async (status, message) => {
     vi.stubGlobal("fetch", reply(status, { error: "x" }));
     render(<AskCourtside />);

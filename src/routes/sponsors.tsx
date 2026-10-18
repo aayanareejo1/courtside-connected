@@ -7,9 +7,9 @@ import { t } from "@/lib/i18n";
 export const Route = createFileRoute("/sponsors")({
   loader: ({ context }) => context.queryClient.ensureQueryData(eventContentQuery),
   head: () => ({ meta: [
-    { title: "Sponsors and offers — Courtside Connected" },
+    { title: "Sponsors and offers - OVAchamps" },
     { name: "description", content: "Event sponsors and offers for OVA families." },
-    { property: "og:title", content: "Sponsors and offers — Courtside Connected" },
+    { property: "og:title", content: "Sponsors and offers - OVAchamps" },
     { property: "og:description", content: "Event sponsors and offers for OVA families." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
   ] }),
