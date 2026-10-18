@@ -33,7 +33,7 @@ export function ConnectionBanner() {
   const text = state.savedAt !== null
     ? `${state.online ? t.offline.saved : t.offline.banner} ${clock(state.savedAt)} · ${t.schedule.timezone}${state.online ? ` — ${t.offline.retrying}` : ""}`
     : t.offline.noSaved;
-  return <div className="min-h-16" aria-live="polite">
+  return <div aria-live="polite">
     {visible && <div role="status" className="flex min-h-16 items-center gap-2 bg-warning px-4 py-2 text-sm font-semibold text-warning-foreground">
       <WifiOff className="h-4 w-4 shrink-0" aria-hidden="true" /><span>{text}</span>
     </div>}
