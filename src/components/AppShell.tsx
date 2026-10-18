@@ -14,7 +14,8 @@ export function AppShell({ children }: { children: ReactNode }) {
    <Link to="/" className="tap inline-flex flex-wrap items-center font-display text-xl font-bold uppercase">Courtside <span className="text-accent">Connected</span></Link>
   </header>
   <ConnectionBanner />
-  <main tabIndex={-1} id="main" className="flex-1 px-4 pb-40 pt-4">{children}</main>
+  <main tabIndex={-1} id="main" className="flex-1 px-4 pb-6 pt-4">{children}</main>
+  <footer className="px-4 pb-40 text-sm text-muted-foreground">{t.privacy.note}</footer>
   <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-20 border-t bg-card">
    <ul className="mx-auto grid max-w-xl grid-cols-5">{items.map(({ to,label,Icon }) => <li key={to}>
     <Link to={to} activeOptions={{ exact: to === "/" }} className="tap flex flex-col items-center justify-center gap-0.5 break-words py-2 text-xs font-medium text-muted-foreground data-[status=active]:text-primary"><Icon className="h-6 w-6 shrink-0" aria-hidden /><span className="w-full min-w-0 break-words text-center">{label}</span></Link>
