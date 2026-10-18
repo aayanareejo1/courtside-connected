@@ -84,7 +84,6 @@ function Home() {
             })}
           </ul>
         </section>
-        <p className="border-t pt-4 text-sm text-muted-foreground">{t.privacy.note}</p>
       </div>
     );
 }
