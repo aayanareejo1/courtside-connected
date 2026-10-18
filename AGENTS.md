@@ -18,3 +18,5 @@
 - Speer is a swappable roster adapter (mock reads a CSV in the sample roster format); the Register button still links out via the event registration link. Why: Speer has no live link yet.
 - AES adapter reads the public AES event endpoint by event key from source config; MyTeam beach data is a stored snapshot because the page renders client-side. Why: only AES exposes readable JSON.
 - Event data is cached on the device (one namespaced key) and served with its save time when loading fails; a banner says when saved data is shown. Why: schedules stay readable on weak venue Wi-Fi without a service worker.
+- Match lists share pure source-notice rules and one badge component, attributed by canonical match source_id; missing attribution is conservative and device fallback overrides live provenance. Why: every screen stays honest without per-row badge noise.
+- Court match reads reuse the event-directory device cache and canonical teams. Why: last-known court schedules survive cold offline navigation.

@@ -1,5 +1,6 @@
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { readEventData } from "@/lib/event-data";
 
 export const venueQuery = queryOptions({
   queryKey: ["venue-map"],
@@ -23,10 +24,14 @@ export const courtMatchesQuery = (courtId: string) => queryOptions({
   refetchInterval: (q) => (q.state.data?.some((m) => m.status === "live") ? 15_000 : 30_000),
   queryKey: ["court-matches", courtId],
   queryFn: async () => {
-    const { data, error } = await supabase.from("matches")
-      .select("id,start_at,est_duration_min,time_estimated,status,home:teams!matches_home_team_id_fkey(id,name),away:teams!matches_away_team_id_fkey(id,name),results(home_sets,away_sets)")
-      .eq("court_id", courtId).order("start_at");
-    if (error) throw error;
-    return data;
+    // Reuse the event cache so cold/offline court navigation retains last-known games.
+    const data = await readEventData();
+    return data.matches.filter((match) => match.court_id === courtId).map((match) => ({
+      ...match,
+      home: data.teams.find((team) => team.id === match.home_team_id) ?? null,
+      away: data.teams.find((team) => team.id === match.away_team_id) ?? null,
+      sources: data.sources ?? [],
+      offlineSavedAt: data.offlineSavedAt,
+    }));
   },
 });

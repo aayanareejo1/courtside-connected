@@ -24,3 +24,7 @@
 - Item 12 (staff): aayanareejo@gmail.com invited and granted staff. Publish/delete test pending first sign-in.
 - Phase 1 checks: axe found 0 violations on /, /search, /following, /info, /sponsors, 404; no horizontal scroll at 390px. /auth and the staff form still need a signed-in pass.
 - Phase 2 (AI assistant): see plan agreed with the team before building.
+
+## Current step
+- [x] Audit provenance across Home, Schedule, Team, Court, Search and Follows: list-level source badges, last successful update times, conservative missing-source and device-snapshot labels. 22 label tests passed; no SQL or deployment changes.
+- [ ] Review lovable changes before merging; hosted verification pending merge.
