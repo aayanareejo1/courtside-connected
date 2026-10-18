@@ -15,7 +15,7 @@ export type CourtScreenMatch = CourtMatch & { source_id?: string | null; time_es
 
 export function CourtScreen({ court, courts, areas, venue, matches, sources, savedAt, now }: {
   court: MapCourt; courts: MapCourt[]; areas: MapArea[]; venue: { plan_width: number; plan_height: number };
-  matches: CourtScreenMatch[]; sources?: MatchSource[]; savedAt?: number | null; now: number;
+  matches: CourtScreenMatch[]; sources?: MatchSource[] | undefined; savedAt?: number | null | undefined; now: number;
 }) {
   const [number, setNumber] = useState("");
   const area = areas.find(a => a.id === court.area_id);

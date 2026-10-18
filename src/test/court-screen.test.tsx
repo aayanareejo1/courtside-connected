@@ -12,13 +12,13 @@ const props={courts,areas,venue:{plan_width:1000,plan_height:700},matches,now};
 afterEach(cleanup);
 describe('Court screen outcomes',()=>{
  it('keeps matches visible without any map position or pin',()=>{
-  render(<CourtScreen {...props} court={courts[1]} />);
+  render(<CourtScreen {...props} court={courts[1]!} />);
   expect(screen.queryByRole('group',{name:'Venue map'})).toBeNull();
   expect(within(screen.getByRole('region',{name:'Up next'})).getByText(/Home 0/)).toBeDefined();
   expect(within(screen.getByRole('region',{name:'Next three matches'})).getAllByRole('listitem')).toHaveLength(3);
  });
  it('highlights the selected court pin and routes number search to the matching court',()=>{
-  render(<CourtScreen {...props} court={courts[0]} />);
+  render(<CourtScreen {...props} court={courts[0]!} />);
   const map=screen.getByRole('group',{name:'Venue map'});
   expect(within(map).getByRole('link',{name:'Court 5'}).getAttribute('aria-current')).toBe('page');
   expect(within(map).queryByRole('link',{name:'Court 9'})).toBeNull();

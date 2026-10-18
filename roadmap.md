@@ -33,3 +33,9 @@
 - [ ] Verify changed tight-turnaround and empty-team views on hosted lovable code after review/merge; public app currently runs older main code. No SQL or deployment changes.
 - [x] Audit provenance across Home, Schedule, Team, Court, Search and Follows: list-level source badges, last successful update times, conservative missing-source and device-snapshot labels. 22 label tests passed; no SQL or deployment changes.
 - [ ] Review lovable changes before merging; hosted verification pending merge.
+
+## Real source adapters (branch real_sources)
+- MyTeam: `mapMyteam` (pure, tested). Live only when the source config has `schedule_id`. Pairs become initials. Past dates are labelled snapshot, re-dated data is labelled sample.
+- AES: `mapAesSchedule` (pure, tested). Live only when config has `schedule_dates`; never deletes rows. Server requests currently get HTTP 403, so it stays off until OVA authorizes access.
+- TIMU: provenance now follows the data date (past is snapshot, re-dated is sample).
+- Config switches live in `supabase/real-sources-config.sql`. These are undocumented public endpoints; get OVA authorization before relying on them.

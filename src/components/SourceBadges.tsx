@@ -3,7 +3,7 @@ import { t } from "@/lib/i18n";
 import { matchSourceNotices, type MatchSource, type SourcedMatch } from "@/lib/source-status";
 
 export function SourceBadges({ matches, sources = [], savedAt = null }: {
-  matches: readonly SourcedMatch[]; sources?: readonly MatchSource[]; savedAt?: number | null;
+  matches: readonly SourcedMatch[]; sources?: readonly MatchSource[] | undefined; savedAt?: number | null | undefined;
 }) {
   const [now, setNow] = useState(0);
   useEffect(() => { setNow(Date.now()); const id = setInterval(() => setNow(Date.now()), 30_000); return () => clearInterval(id); }, []);

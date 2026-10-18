@@ -1,7 +1,7 @@
 import { eventDateLabel, eventTime } from '@/lib/schedule';
 import { t } from '@/lib/i18n';
 
-export function MatchTime({ value, arrival = false, estimated = false, className }: { value: string | Date; arrival?: boolean; estimated?: boolean; className?: string }) {
+export function MatchTime({ value, arrival = false, estimated = false, className }: { value: string | Date; arrival?: boolean; estimated?: boolean | undefined; className?: string }) {
   const date = new Date(value);
   if (!Number.isFinite(date.getTime())) return <span>{t.provenance.timeUnknown}</span>;
   const label = `${arrival ? t.schedule.arrive : t.schedule.start}: ${eventDateLabel(date.toISOString())}, ${eventTime(date)}, ${t.schedule.timezone}${estimated ? `, ${t.schedule.estimated}` : ''}`;

@@ -23,13 +23,13 @@ describe('Follow controls and rendered schedule outcomes', () => {
  it('renders Toronto starts, fixed arrival guidance, court and tight turnaround', () => {
   render(<FollowedSchedule data={data} matches={rows} />);
   const items=screen.getAllByRole('listitem');
-  expect(within(items[0]).getAllByText('10:00 a.m.')).toHaveLength(1);
-  expect(within(items[0]).getByText('9:45 a.m.')).toBeDefined();
-  expect(within(items[0]).getByText('Court 5')).toBeDefined();
-  expect(within(items[0]).getByText(/Tight turnaround/)).toBeDefined();
+  expect(within(items[0]!).getAllByText('10:00 a.m.')).toHaveLength(1);
+  expect(within(items[0]!).getByText('9:45 a.m.')).toBeDefined();
+  expect(within(items[0]!).getByText('Court 5')).toBeDefined();
+  expect(within(items[0]!).getByText(/Tight turnaround/)).toBeDefined();
  });
  it('renders the final score and never arrival guidance for a finished match', () => {
-  render(<FollowedSchedule data={data} matches={[{...rows[0],status:'final',results:[{home_sets:2,away_sets:1}]}]} results />);
+  render(<FollowedSchedule data={data} matches={[{...rows[0]!,status:'final',results:{home_sets:2,away_sets:1}}]} results />);
   expect(screen.getByText('2–1')).toBeDefined();
   expect(screen.queryByText('Arrive by')).toBeNull();
  });

@@ -142,3 +142,119 @@ export function parseTimuHtml(html: string, opts: TimuParseOptions): { games: Ti
   if (!games.length) throw new Error("TIMU page had no matches");
   return { games };
 }
+
+// ---------- Shared time helpers (venue time is Toronto, never the device or server timezone) ----------
+export const torontoDate = (iso: string) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Toronto" }).format(new Date(iso));
+const torontoClock = (iso: string) => new Intl.DateTimeFormat("en-GB", { timeZone: "America/Toronto", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(iso));
+// Moves a real start time onto another venue date, keeping the same Toronto clock time (used only for demo dates).
+const onDate = (iso: string, date: string) => torontoTimestamp(`${date}T${torontoClock(iso)}`)!;
+
+// ---------- MyTeam.click (JSON behind the schedule page; beach pairs) ----------
+// Beach pairs are people, often minors: only initials ever leave the adapter ("E.Kent Elmido/J.Reyes" becomes "E.E. / J.R.").
+export function pairInitials(name: string): string {
+  const partners = name.split("/").map((p) => p.trim()).filter(Boolean);
+  if (!partners.length) throw new Error("Empty pair name");
+  return partners
+    .map((p) => {
+      const tagged = /^(\p{L})\.\s*(.+)$/u.exec(p);
+      const first = tagged ? tagged[1]! : p[0]!;
+      const rest = tagged ? tagged[2]! : p.split(/\s+/).slice(1).join(" ") || p;
+      return `${first}.${rest.split(/\s+/).pop()![0]!}.`.toUpperCase();
+    })
+    .join(" / ");
+}
+
+export type MyteamSchedule = {
+  success?: boolean;
+  event: {
+    timeFrames: { start: string }[];
+    groups: { name: string; suffix?: string; teams: { _id: string; name: string }[] }[];
+    matchList: { _id: number; type?: string; state?: number; courtNo: number; time: number; dayIndex?: number | null; teams?: { teamId?: string; scores?: number[] }[] }[];
+  };
+};
+export type MyteamOptions = { scheduleId: string; division?: string | undefined; eventDate?: string | undefined; courtMap?: Record<string, string> | undefined };
+
+export function mapMyteam(schedule: MyteamSchedule, opts: MyteamOptions): CanonicalMatch[] {
+  const ev = schedule?.event;
+  if (!ev || !Array.isArray(ev.matchList) || !Array.isArray(ev.groups) || !Array.isArray(ev.timeFrames)) throw new Error("MyTeam payload has no schedule");
+  const teams = new Map<string, { name: string; division: string }>();
+  const used = new Set<string>();
+  for (const g of ev.groups) {
+    const division = opts.division ?? `${g.name} ${g.suffix ?? ""}`.trim();
+    for (const t of g.teams ?? []) {
+      let name = pairInitials(t.name);
+      for (let n = 2; used.has(name); n++) name = `${pairInitials(t.name)} (${n})`; // two pairs can share initials
+      used.add(name);
+      teams.set(t._id, { name, division });
+    }
+  }
+  const out: CanonicalMatch[] = [];
+  for (const m of ev.matchList) {
+    const [a, b] = [m.teams?.[0], m.teams?.[1]];
+    if (!a?.teamId || !b?.teamId) continue; // finals whose teams are not decided yet
+    const home = teams.get(a.teamId);
+    const away = teams.get(b.teamId);
+    if (!home || !away) throw new Error(`Unknown MyTeam team in match ${m._id}`);
+    const frame = ev.timeFrames[m.dayIndex ?? 0];
+    if (!frame || !Number.isFinite(m.time)) throw new Error(`Incomplete MyTeam match ${m._id}`);
+    const realStart = new Date(Date.parse(frame.start) + m.time * 60_000).toISOString();
+    const sets: number[][] = [];
+    const [sa, sb] = [a.scores ?? [], b.scores ?? []];
+    for (let i = 0; i < Math.min(sa.length, sb.length); i++) if (Number.isFinite(sa[i]) && Number.isFinite(sb[i])) sets.push([sa[i]!, sb[i]!]);
+    const home_sets = sets.filter(([h, w]) => h! > w!).length;
+    const away_sets = sets.filter(([h, w]) => w! > h!).length;
+    out.push({
+      external_id: `myteam-${opts.scheduleId}-${m._id}`,
+      division: home.division,
+      pool: m.type === "F" ? "Finals" : "Pool play",
+      date: opts.eventDate ?? torontoDate(realStart),
+      start_at: opts.eventDate ? onDate(realStart, opts.eventDate) : realStart,
+      court_label: opts.courtMap?.[String(m.courtNo)] ?? String(m.courtNo),
+      home: home.name,
+      away: away.name,
+      status: m.state === 2 ? "final" : sets.length ? "live" : "scheduled",
+      time_estimated: false,
+      result: sets.length ? { home_sets, away_sets, set_scores: sets } : null,
+    });
+  }
+  return out;
+}
+
+// ---------- AES (JSON behind the Court Sched page; one payload per day) ----------
+// The court schedule carries the match, teams, court and absolute times. It has no set scores, only an "outcome recorded" flag.
+export type AesCourtDay = {
+  CourtSchedules: { Name: string; CourtMatches: { MatchId: number; Division?: { Name?: string }; FirstTeamText?: string; SecondTeamText?: string; ScheduledStartDateTime: number; HasOutcome?: boolean }[] }[];
+};
+
+export function mapAesSchedule(days: AesCourtDay[], opts: { onlyCourts?: string[] | undefined } = {}): CanonicalMatch[] {
+  if (!Array.isArray(days) || days.some((d) => !Array.isArray(d?.CourtSchedules))) throw new Error("AES payload has no court schedules");
+  const teamName = (text: string | undefined) => (text ?? "").replace(/\s*\(\d+\)\s*$/, "").trim(); // AES appends a team number
+  const byId = new Map<string, CanonicalMatch>(); // the same match must never appear twice in one batch
+  for (const day of days) {
+    for (const court of day.CourtSchedules) {
+      const label = /(\d+)/.exec(court.Name)?.[1] ?? court.Name.trim();
+      if (opts.onlyCourts && !opts.onlyCourts.includes(label)) continue;
+      for (const m of court.CourtMatches ?? []) {
+        const home = teamName(m.FirstTeamText);
+        const away = teamName(m.SecondTeamText);
+        if (!home || !away) continue; // teams not assigned yet
+        if (!Number.isFinite(m.MatchId) || !Number.isFinite(m.ScheduledStartDateTime)) throw new Error(`Incomplete AES match ${m.MatchId ?? "?"}`);
+        const start_at = new Date(m.ScheduledStartDateTime).toISOString();
+        byId.set(`aes${m.MatchId}`, {
+          external_id: `aes${m.MatchId}`,
+          division: m.Division?.Name ?? "",
+          pool: null,
+          date: torontoDate(start_at),
+          start_at,
+          court_label: label,
+          home,
+          away,
+          status: m.HasOutcome ? "final" : "scheduled",
+          time_estimated: false,
+          result: null,
+        });
+      }
+    }
+  }
+  return [...byId.values()];
+}
