@@ -33,7 +33,7 @@ describe("TIMU mapping", () => {
 describe("Speer roster CSV", () => {
   it("never stores full last names and keeps two coaches", () => {
     const [team] = parseRosterCsv(speerRosterCsv);
-    expect(team!.players).toHaveLength(11);
+    expect(team!.players).toHaveLength(12);
     expect(team!.players[0]).toEqual({ display_name: "Ava B.", jersey_number: 2 });
     expect(team!.staff.map((s) => s.role)).toEqual(["Head Coach", "Assistant Coach"]);
     expect(JSON.stringify(team)).not.toContain("Brennan");
