@@ -26,6 +26,8 @@
 - Phase 2 (AI assistant): see plan agreed with the team before building.
 
 ## Current step
+- [x] Add docs/demo-checklist.md; complete lovable d8a1f4f checks: 155 tests/20 files PASS; production build PASS; tsgo FAIL (12 errors/5 files). No app, configuration, deployment or SQL changes.
+- [ ] Resolve reported strict-type diagnostics in a separate step; hosted routes, two-minute scheduler and staff sign-in require hosted evidence/session.
 - [x] Court lookup by number, highlighted area/pin, current-or-next plus next three matches, and missing-position safety. 76 tests passed (19 Court tests plus 57 regressions); isolated component browser checks passed at 375px and 1280px with 44px lookup targets, no overflow or page errors. Hosted checks await review/merge; no SQL or deployment changes.
 - [x] Verify device-only team/player follows: public signed-out browser confirmed both follow clicks send zero requests, persistence after reload, Toronto times, sorted matches and final scores. Added future-start filtering, fixed fan arrival lead, per-team empty states, tight-turnaround notes and blocked-storage fallback. 57 tests passed across five suites (22 new follow/schedule tests, 35 existing checks).
 - [ ] Verify changed tight-turnaround and empty-team views on hosted lovable code after review/merge; public app currently runs older main code. No SQL or deployment changes.
