@@ -1,3 +1,4 @@
+import { DemoBanner } from "@/components/DemoBanner";
 import { Link } from "@tanstack/react-router";
 import { Home, Search, Star, Info, Gift } from "lucide-react";
 import type { ReactNode } from "react";
@@ -9,6 +10,7 @@ const items = [
 ] as const;
 export function AppShell({ children }: { children: ReactNode }) {
  return <div className="mx-auto flex min-h-dvh max-w-xl flex-col">
+  <DemoBanner />
   <a href="#main" className="sr-only focus:not-sr-only focus:p-3">Skip to content</a>
   <header className="relative z-20 flex items-center justify-between bg-ink px-4 py-3 text-ink-foreground">
    <Link to="/" className="tap inline-flex flex-wrap items-center font-display text-xl font-bold uppercase">Courtside <span className="text-accent-foreground">Connected</span></Link>
