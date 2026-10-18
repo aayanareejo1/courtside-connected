@@ -1,3 +1,4 @@
+import { appNow } from "@/lib/clock";
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { activeAnnouncements } from "@/lib/content-rules";
@@ -28,5 +29,5 @@ export const eventContentQuery = queryOptions({
   initialData: () => savedData<Content>(CONTENT_CACHE_KEY),
   initialDataUpdatedAt: 0,
   queryFn: () => withDeviceCache(loadEventContent, deviceStorage(), CONTENT_CACHE_KEY),
-  select: (data) => ({ ...data, announcements: activeAnnouncements(data.announcements, Date.now()) }),
+  select: (data) => ({ ...data, announcements: activeAnnouncements(data.announcements, appNow()) }),
 });
