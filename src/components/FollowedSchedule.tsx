@@ -26,7 +26,7 @@ export function FollowedSchedule({ data, matches, results = false }: { data: Eve
       return <li key={m.id} className={`overflow-hidden rounded-lg border bg-card ${conflicts.length || tight.length ? "border-accent" : ""}`}>
         <div className="space-y-3 p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
-            <div><p className="text-xs uppercase text-muted-foreground">{t.schedule.starts}</p><MatchTime value={m.start_at} estimated={m.time_estimated} className="font-display text-3xl font-bold" />{m.time_estimated && <p className="text-sm font-semibold text-muted-foreground">{t.schedule.estimated}</p>}</div>
+            <div><p className="text-xs uppercase text-muted-foreground">{t.schedule.start}</p><MatchTime value={m.start_at} estimated={m.time_estimated} className="font-display text-3xl font-bold" />{m.time_estimated && <p className="text-sm font-semibold text-muted-foreground">{t.schedule.estimated}</p>}</div>
             {!results && m.status !== "cancelled" && <div className="text-right text-primary"><p className="flex items-center justify-end gap-1 text-xs"><Clock className="h-3 w-3" aria-hidden />{t.schedule.arrive}</p><MatchTime value={recommendedArrivalTime(m.start_at)} arrival className="font-display text-3xl font-bold" /></div>}
             {results && (score ? <MatchScore home={home?.name ?? t.court.tbd} away={away?.name ?? t.court.tbd} homeSets={score.home_sets} awaySets={score.away_sets} final className="font-display text-3xl font-bold" /> : <span className="text-sm text-muted-foreground">{t.schedule.resultPending}</span>)}
           </div>
@@ -37,5 +37,5 @@ export function FollowedSchedule({ data, matches, results = false }: { data: Eve
         {conflicts.length > 0 && <div className="space-y-1 bg-accent/10 px-4 py-3 text-foreground"><p className="flex items-center gap-2 text-sm font-bold"><AlertTriangle className="h-4 w-4 shrink-0" aria-hidden />{t.schedule.clash}</p>{conflicts.map((other) => { const otherCourt = data.courts.find((c) => c.id === other.court_id); return <p key={other.id} className="text-sm">{t.schedule.clashWith} {eventTime(other.start_at)} · {otherCourt ? `${t.map.court} ${otherCourt.label}` : other.court_label_raw ?? t.schedule.courtUnknown}</p>; })}</div>}
       </li>;
     })}</ul>
-  </section>=}</div>;
+  </section>)}</div>;
 }
