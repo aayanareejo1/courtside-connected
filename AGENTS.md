@@ -29,4 +29,4 @@
 
 - Ask Courtside receives the last three exchanges and resolves "my", "me" and follow ups to the player or team named earlier (never for sponsor, hotel, merchandise, 50/50 or directions questions); a named player or team always gets a full profile (team, division, club, coaches, record, every match with court, hall and arrival time). Why: a fan can talk to it naturally and still get one complete answer.
 - Venue directions come from one pure helper (Google Maps and Apple Maps links built from the venue name and address); the team page shares through the phone share sheet or copies the link. Why: no map or share vendor needed.
-
+- Ask Courtside is a tool using agent: the model calls read only tools (get_followed, find_players, get_profile, get_matches, get_links, get_event_info) over the canonical event data, asks the fan a question when it does not know who they mean, and may only link URLs that tools returned; if the model fails, the rule based answer is used. Why: the model decides the conversation while data and links stay controlled.
