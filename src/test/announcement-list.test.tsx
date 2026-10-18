@@ -18,13 +18,13 @@ describe("Announcement list presentation", () => {
     expect(ordered.map((a) => a.id)).toEqual(["2", "3", "1"]);
     render(<AnnouncementBanner announcements={ordered} />);
     const items = screen.getAllByRole("listitem");
-    expect(within(items[0]).getByText("Urgent")).toBeDefined();
-    expect(within(items[0]).getByText("Hall B evacuation drill")).toBeDefined();
+    expect(within(items[0]!).getByText("Urgent")).toBeDefined();
+    expect(within(items[0]!).getByText("Hall B evacuation drill")).toBeDefined();
     expect(screen.queryByText("Event update")).toBeNull();
     expect(screen.queryByText("Important")).toBeNull();
   });
   it("shows a small grey Toronto time for each announcement", () => {
-    render(<AnnouncementBanner announcements={[rows[0]]} />);
+    render(<AnnouncementBanner announcements={[rows[0]!]} />);
     const time = screen.getByText(/Oct 18/);
     expect(time.tagName).toBe("TIME");
     expect(time.getAttribute("datetime")).toBe("2026-10-18T12:00:00Z");
