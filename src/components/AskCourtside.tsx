@@ -34,7 +34,7 @@ export function renderAnswer(text: string): ReactNode[] {
   return out;
 }
 
-export function AskCourtside({ initialQuestion }: { initialQuestion?: string | undefined }) {
+export function AskCourtside({ initialQuestion, trigger }: { initialQuestion?: string | undefined; trigger?: { q: string; n: number } | undefined }) {
   const { follows } = useFollows();
   const [text, setText] = useState("");
   const [items, setItems] = useState<Exchange[]>([]);
@@ -58,6 +58,7 @@ export function AskCourtside({ initialQuestion }: { initialQuestion?: string | u
     setBusy(false);
   }
 
+  useEffect(() => { if (trigger?.q) void ask(trigger.q); }, [trigger?.n]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (initialQuestion && !asked.current) { asked.current = true; void ask(initialQuestion); } }, [initialQuestion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return <div className="space-y-4">

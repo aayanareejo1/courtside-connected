@@ -27,7 +27,7 @@ export const Route = createFileRoute("/api/public/ask")({
           const ask = () => fetch("https://api.anthropic.com/v1/messages", {
             method: "POST",
             headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
-            body: JSON.stringify({ model: "claude-haiku-5-5", max_tokens: 400, system: SYSTEM_PROMPT, messages: [{ role: "user", content: `FACTS\n${facts.text}\nEND FACTS\n\nFan question: ${body.question}` }] }),
+            body: JSON.stringify({ model: "claude-haiku-5-5", max_tokens: 700, system: SYSTEM_PROMPT, messages: [{ role: "user", content: `FACTS\n${facts.text}\nEND FACTS\n\nFan question: ${body.question}` }] }),
             signal: AbortSignal.timeout(12_000),
           });
           let reason = "";
@@ -36,10 +36,10 @@ export const Route = createFileRoute("/api/public/ask")({
               const res = await ask();
               if (res.status === 429 || res.status >= 500) { reason = `model_${res.status}`; continue; } // one retry
               if (!res.ok) { reason = `model_${res.status}`; break; }
-              const out = (await res.json()) as { content?: { type: string; text?: string }[] };
+              const out = (await res.json()) as { content?: { type: string; text?: string }[]; stop_reason?: string };
               const text = out.content?.find((c) => c.type === "text")?.text?.trim();
               if (!text) { reason = "empty_answer"; break; }
-              return Response.json({ ...sanitizeAnswer(text, facts.links), mode: "ai" });
+              return Response.json({ ...sanitizeAnswer(text, facts.links, out.stop_reason === "max_tokens"), mode: "ai" });
             } catch (e) {
               reason = e instanceof Error && e.name === "TimeoutError" ? "timeout" : "network";
             }

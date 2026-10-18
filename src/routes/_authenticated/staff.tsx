@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
@@ -76,6 +76,7 @@ function StaffPage() {
   }
 
   return <div className="space-y-8 py-4">
+    <Link to="/" className="tap inline-flex items-center text-sm text-muted-foreground underline">Back to the event</Link>
     <header className="flex items-start justify-between gap-3">
       <div><p className="text-muted-foreground">{event.name}</p><h1 className="text-4xl font-bold uppercase">{t.admin.postTitle}</h1></div>
       <Button variant="outline" className="tap h-11" onClick={signOut}>{t.admin.signOut}</Button>

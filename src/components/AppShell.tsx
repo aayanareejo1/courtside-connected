@@ -4,6 +4,7 @@ import { Home, Search, Star, Info, Gift } from "lucide-react";
 import type { ReactNode } from "react";
 import { t } from "@/lib/i18n";
 import { ConnectionBanner } from "@/components/ConnectionBanner";
+import { AskWidget } from "@/components/AskWidget";
 const items = [
  { to: "/", label: t.nav.home, Icon: Home }, { to: "/search", label: t.nav.search, Icon: Search },
  { to: "/following", label: t.nav.following, Icon: Star }, { to: "/info", label: t.nav.info, Icon: Info }, { to: "/sponsors", label: t.nav.sponsors, Icon: Gift },
@@ -17,7 +18,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   </header>
   <ConnectionBanner />
   <main tabIndex={-1} id="main" className="flex-1 px-4 pb-6 pt-4">{children}</main>
-  <footer className="px-4 pb-40 text-sm text-muted-foreground">{t.privacy.note}</footer>
+  <footer className="space-y-2 px-4 pb-40 text-sm text-muted-foreground"><p>{t.privacy.note}</p><p><Link to="/staff" className="tap inline-flex items-center underline">{t.admin.brandLink}</Link></p></footer>
+  <AskWidget />
   <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-20 border-t bg-card">
    <ul className="mx-auto grid max-w-xl grid-cols-5">{items.map(({ to,label,Icon }) => <li key={to}>
     <Link to={to} activeOptions={{ exact: to === "/" }} className="tap flex flex-col items-center justify-center gap-0.5 break-words py-2 text-xs font-medium text-muted-foreground data-[status=active]:text-primary"><Icon className="h-6 w-6 shrink-0" aria-hidden /><span className="w-full min-w-0 break-words text-center">{label}</span></Link>

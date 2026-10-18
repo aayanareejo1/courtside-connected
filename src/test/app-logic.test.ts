@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { DEMO_START, demoClock, nextDemoState } from "@/lib/clock";
 import { buildCalendar, toIcs } from "@/lib/calendar";
-import { buildFacts, fallbackAnswer, matchPlayers, parseAskRequest, parseQuantity, sanitizeAnswer } from "@/lib/ask-courtside";
+import { buildFacts, fallbackAnswer, matchPlayers, parseAskRequest, parseQuantity, plainText, sanitizeAnswer } from "@/lib/ask-courtside";
 import { KNOWN_LINKS } from "@/lib/ask-knowledge";
 import { mapTimu } from "@/lib/source-mapping";
 import { timuDay1 } from "@/server/fixtures/timu-day1";
@@ -115,6 +115,14 @@ describe("Ask Courtside", () => {
     expect(out.answer).not.toContain("evil.example");
     expect(out.links.map((l) => l.url)).toEqual(["https://www.ontariovolleyball.org/accommodations"]);
     expect(f.links.some((l) => l.url.includes("docs.google.com") || l.url.includes("catalyst2026"))).toBe(false);
+  });
+  it("turns model markdown into plain text and repairs a cut off link", () => {
+    const raw = "Aayan A. plays for **Lakeshore Storm 13U**.\n- **Court 20**, Hall 2\n- Be there by 11:15 a.m.\n\nSee [Schedules on AES](https://results.";
+    const out = plainText(raw, true);
+    expect(out).not.toContain("**");
+    expect(out).not.toMatch(/^- /m);
+    expect(out).not.toContain("https://results.");
+    expect(out).toContain("Court 20, Hall 2");
   });
   it("offers every case study link for a use", () => {
     const cats = new Set(KNOWN_LINKS.map((l) => l.category));
