@@ -5,6 +5,7 @@ export const followsKey = "courtside-follows";
 const empty: Follow[] = [];
 let cachedRaw: string | null = null;
 let cached: Follow[] = empty;
+let memoryOnly = false;
 const listeners = new Set<() => void>();
 
 export function parseFollows(raw: string | null): Follow[] {
@@ -17,6 +18,7 @@ export function parseFollows(raw: string | null): Follow[] {
 }
 
 function snapshot() {
+  if (memoryOnly) return cached;
   try {
     const raw = localStorage.getItem(followsKey);
     if (raw !== cachedRaw) { cachedRaw = raw; cached = parseFollows(raw); }
@@ -37,7 +39,7 @@ export function useFollows() {
     cached = current.some((v) => v.type === item.type && v.id === item.id)
       ? current.filter((v) => v.type !== item.type || v.id !== item.id) : [...current, item];
     cachedRaw = JSON.stringify(cached);
-    try { localStorage.setItem(followsKey, cachedRaw); } catch { /* In-memory fallback. */ }
+    try { localStorage.setItem(followsKey, cachedRaw); } catch { memoryOnly = true; }
     listeners.forEach((listener) => listener());
   };
   return { follows, toggle };

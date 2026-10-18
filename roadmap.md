@@ -26,5 +26,7 @@
 - Phase 2 (AI assistant): see plan agreed with the team before building.
 
 ## Current step
+- [x] Verify device-only team/player follows: public signed-out browser confirmed both follow clicks send zero requests, persistence after reload, Toronto times, sorted matches and final scores. Added future-start filtering, fixed fan arrival lead, per-team empty states, tight-turnaround notes and blocked-storage fallback. 57 tests passed across five suites (22 new follow/schedule tests, 35 existing checks).
+- [ ] Verify changed tight-turnaround and empty-team views on hosted lovable code after review/merge; public app currently runs older main code. No SQL or deployment changes.
 - [x] Audit provenance across Home, Schedule, Team, Court, Search and Follows: list-level source badges, last successful update times, conservative missing-source and device-snapshot labels. 22 label tests passed; no SQL or deployment changes.
 - [ ] Review lovable changes before merging; hosted verification pending merge.

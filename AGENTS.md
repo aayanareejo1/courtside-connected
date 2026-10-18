@@ -7,7 +7,7 @@
 
 - Search and team pages share an event-scoped canonical directory query; public RLS remains the visibility boundary. Why: results and roster links stay consistent for the active event.
 - Device follows use one namespaced local-storage key and a shared subscription store hydrated after SSR. Why: follow controls stay synchronized without spectator accounts.
-- Combined schedules resolve player follows to teams and deduplicate matches by ID; arrival and clash rules are pure tested functions using event settings and estimated durations. Why: shared matches appear once and timing changes propagate consistently.
+- Combined schedules resolve player follows to teams and deduplicate matches by ID; shared pure helpers determine upcoming rows, fixed fan arrival guidance, tight turnarounds and empty teams, with estimated durations retained for clash warnings. Why: every fan gets consistent, tested schedule guidance without changing staff settings.
 - Schedule dates and times use the event venue's Toronto timezone rather than the spectator device timezone. Why: arrival instructions must match venue clocks.
 - Announcements may target one division or one hall; Home shows untargeted ones, while team, court and My schedule pages show those matching their division or hall. Why: targeted updates reach only the people they concern.
 - Home, Info and Sponsors share an event-scoped published-content query; announcements respect their active window and sponsor pins link to the matching offer. Why: public event content stays consistent across views.
