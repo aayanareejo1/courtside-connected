@@ -10,4 +10,11 @@
 - [x] 8. Time-boxed spike: live TIMU every 2 min, mock fallback
 - [ ] 9. AES live matches — blocked: public event endpoint exposes metadata only; need a confirmed authorized schedule/score feed. Research checked the supplied event URL on 2026-10-17; direct public request succeeded, but current app sync still records HTTP 403.
 - [x] 10. Verify refresh configuration and inspect recent runs: active two-minute job exists; TIMU has imported 21 matches in recent successful runs.
-- [ ] 10b. (After migration: use queries in supabase/cron.sql.) Verify reliable two-minute execution — recent run times are irregular; active job configuration alone does not prove the requested cadence.
+- [x] 10b. After migration (2026-10-18): pg_cron fires every two minutes (00:34, 00:36 UTC), app returns HTTP 200, all four sources record runs. Keep watching with the queries in supabase/cron.sql. Verify reliable two-minute execution — recent run times are irregular; active job configuration alone does not prove the requested cadence.
+
+## Hosting (since 2026-10-18)
+- App: Cloudflare Worker courtside-connected (courtside-connected.aayanareejo.workers.dev), builds from main on push
+- Data and staff sign-in: Supabase project courtside-connected (Canada Central), invite-only sign-up
+- Sync: Supabase pg_cron every two minutes, Bearer secret stored in Vault
+- [ ] 11. Provenance: TIMU fallback and mock sources still record 'ok'; label live vs fallback vs mock honestly
+- [ ] 12. Staff accounts: invite staff emails in Supabase Auth, then run supabase/staff.sql
