@@ -18,3 +18,9 @@
 - Sync: Supabase pg_cron every two minutes, Bearer secret stored in Vault
 - [ ] 11. Provenance: TIMU fallback and mock sources still record 'ok'; label live vs fallback vs mock honestly
 - [ ] 12. Staff accounts: invite staff emails in Supabase Auth, then run supabase/staff.sql
+
+## Update 2026-10-18
+- Item 11 (provenance) done: sources.last_provenance and source_runs.provenance (live, sample, snapshot, metadata) are written by every sync and shown on Home. A configured live TIMU fetch that fails now records an error and keeps last known data instead of writing sample rows. Migration 0006.
+- Item 12 (staff): aayanareejo@gmail.com invited and granted staff. Publish/delete test pending first sign-in.
+- Phase 1 checks: axe found 0 violations on /, /search, /following, /info, /sponsors, 404; no horizontal scroll at 390px. /auth and the staff form still need a signed-in pass.
+- Phase 2 (AI assistant): see plan agreed with the team before building.
