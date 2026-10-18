@@ -5,7 +5,7 @@ const en = {
   appName: "Courtside Connected",
   nav: { home: "Home", search: "Find", following: "Following", info: "Info", sponsors: "Sponsors" },
   live: { justNow: "Updated just now", updated: "Updated", sec: "s ago", min: " min ago", refreshing: "Checking for new scores…", auto: "Scores update automatically" },
-  offline: { banner: "You are offline. Showing info saved at", saved: "Showing info saved at", retrying: "Weak connection. Retrying automatically." },
+  offline: { banner: "You are offline. Showing saved data from", saved: "Showing saved data from", retrying: "Weak connection. Retrying automatically.", noSaved: "You are offline. No event data has been saved on this device yet." },
   provenance: { title: "Data sources", unknown: "Source not recorded", lastUpdated: "Last updated", timeUnknown: "Time unavailable" },
   home: { announcements: "Announcements", days: "Event days", source: "Data from", updated: "Updated", never: "Not yet synced", courts: "courts", findPeople: "Find people & teams", findPlaces: "Places & directions", failed: "Source not responding — showing last known data", stale: "May be out of date", provenance: { live: "Live from the source", sample: "Sample data, not live", snapshot: "Saved snapshot, not live", metadata: "Event check only, no live scores" } },
   map: { title: "Venue map", listTitle: "Courts list", court: "Court", zoomIn: "Zoom in", zoomOut: "Zoom out", reset: "Reset", hint: "Pinch or use buttons to zoom. Tap a court for details.", placeholder: "Simplified layout, not to scale. The official floor plan will replace it.", stream: "Live stream" },

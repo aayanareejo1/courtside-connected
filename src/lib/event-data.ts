@@ -1,6 +1,6 @@
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { withDeviceCache } from "@/lib/offline-cache";
+import { deviceStorage, savedData, withDeviceCache } from "@/lib/offline-cache";
 
 async function loadEventData() {
     const { data: event, error } = await supabase.from("events").select("id,name,venue_id,warmup_min,walk_min").eq("published", true).limit(1).single();
@@ -20,10 +20,13 @@ async function loadEventData() {
 }
 
 export type EventData = Awaited<ReturnType<typeof loadEventData>> & { offlineSavedAt: number | null };
-export const readEventData = (): Promise<EventData> => typeof window === "undefined" ? loadEventData().then((d) => ({ ...d, offlineSavedAt: null })) : withDeviceCache(loadEventData, window.localStorage);
+export const readEventData = (): Promise<EventData> => withDeviceCache(loadEventData, deviceStorage());
 
 export const eventDataQuery = queryOptions({
   queryKey: ["event-directory"],
+  networkMode: "always",
+  initialData: () => savedData<Awaited<ReturnType<typeof loadEventData>>>(),
+  initialDataUpdatedAt: 0,
   staleTime: 30_000,
   refetchInterval: (q) => (q.state.data?.matches.some((m) => m.status === "live") ? 15_000 : 30_000),
   queryFn: readEventData,
@@ -32,9 +35,13 @@ export const eventDataQuery = queryOptions({
 
 export const teamStaffQuery = (teamId: string) => queryOptions({
   queryKey: ["team-staff", teamId],
-  queryFn: async () => {
+  networkMode: "always",
+  initialData: () => savedData<{ rows: { id: string; display_name: string; role: string }[] }>(`courtside:v1:team-staff:${teamId}`),
+  initialDataUpdatedAt: 0,
+  select: (data) => data.rows,
+  queryFn: () => withDeviceCache(async () => {
     const { data, error } = await supabase.from("staff_members").select("id,display_name,role").eq("team_id", teamId);
     if (error) throw error;
-    return data ?? [];
-  },
+    return { rows: data ?? [] };
+  }, deviceStorage(), `courtside:v1:team-staff:${teamId}`),
 });

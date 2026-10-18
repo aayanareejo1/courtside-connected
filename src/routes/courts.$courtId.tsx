@@ -1,4 +1,5 @@
 import { TargetedAnnouncements } from "@/components/TargetedAnnouncements";
+import { ScheduleSkeleton } from "@/components/ScheduleSkeleton";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -23,6 +24,8 @@ export const Route = createFileRoute("/courts/$courtId")({
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
   ] }),
   component: CourtPage,
+  pendingComponent: ScheduleSkeleton,
+  pendingMs: 150,
   errorComponent: ({ error }) => <p role="alert">{error instanceof Error ? error.message : String(error)}</p>,
   notFoundComponent: () => <p role="alert">{t.court.notFound}</p>,
 });

@@ -1,10 +1,9 @@
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { readEventData } from "@/lib/event-data";
+import { VENUE_CACHE_KEY, deviceStorage, savedData, withDeviceCache } from "@/lib/offline-cache";
 
-export const venueQuery = queryOptions({
-  queryKey: ["venue-map"],
-  queryFn: async () => {
+async function loadVenue() {
     const { data: ev, error } = await supabase.from("events").select("venue_id").eq("published", true).limit(1).single();
     if (error) throw error;
     const vid = ev.venue_id;
@@ -17,14 +16,21 @@ export const venueQuery = queryOptions({
     for (const result of [v, a, c]) if (result.error) throw result.error;
     if (!v.data) throw new Error("Venue not found");
     return { venue: v.data, areas: a.data ?? [], courts: c.data ?? [] };
-  },
+}
+export const venueQuery = queryOptions({
+  queryKey: ["venue-map"],
+  networkMode: "always",
+  staleTime: 30_000,
+  initialData: () => savedData<Awaited<ReturnType<typeof loadVenue>>>(VENUE_CACHE_KEY),
+  initialDataUpdatedAt: 0,
+  queryFn: () => withDeviceCache(loadVenue, deviceStorage(), VENUE_CACHE_KEY),
 });
 
 export const courtMatchesQuery = (courtId: string) => queryOptions({
+  networkMode: "always",
   refetchInterval: (q) => (q.state.data?.some((m) => m.status === "live") ? 15_000 : 30_000),
   queryKey: ["court-matches", courtId],
   queryFn: async () => {
-    // Reuse the event cache so cold/offline court navigation retains last-known games.
     const data = await readEventData();
     return data.matches.filter((match) => match.court_id === courtId).map((match) => ({
       ...match,

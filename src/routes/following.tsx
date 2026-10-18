@@ -1,4 +1,5 @@
 import { TargetedAnnouncements } from "@/components/TargetedAnnouncements";
+import { ScheduleSkeleton } from "@/components/ScheduleSkeleton";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Star } from "lucide-react";
@@ -23,6 +24,9 @@ export const Route = createFileRoute("/following")({
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
   ] }),
   component: FollowingPage,
+  pendingComponent: ScheduleSkeleton,
+  pendingMs: 150,
+  notFoundComponent: () => <p role="alert">{t.search.error}</p>,
   errorComponent: () => <p role="alert">{t.search.error}</p>,
 });
 

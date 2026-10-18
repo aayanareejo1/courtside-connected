@@ -28,8 +28,8 @@ function snapshot() {
 
 function subscribe(listener: () => void) {
   listeners.add(listener);
-  window.addEventListener("storage", listener);
-  return () => { listeners.delete(listener); window.removeEventListener("storage", listener); };
+  if (typeof window !== "undefined") window.addEventListener("storage", listener);
+  return () => { listeners.delete(listener); if (typeof window !== "undefined") window.removeEventListener("storage", listener); };
 }
 
 export function useFollows() {
