@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { t } from "@/lib/i18n";
 import { followedMatches, upcomingMatches, teamsWithoutUpcoming } from "@/lib/schedule";
 import { FollowedSchedule } from "@/components/FollowedSchedule";
+import { ScheduleCalendar } from "@/components/ScheduleCalendar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export const Route = createFileRoute("/following")({
@@ -48,7 +49,7 @@ function FollowingPage() {
     {!teams.length && !players.length && <div className="space-y-4 py-6"><Star className="h-8 w-8 text-muted-foreground" aria-hidden /><p className="text-muted-foreground">{t.follow.empty}</p><Button asChild className="tap"><Link to="/search" search={{ q: "" }}>{t.follow.find}</Link></Button></div>}
     {(teams.length > 0 || players.length > 0) && <Tabs defaultValue="upcoming">
       <TabsList className="mb-4 grid h-auto w-full grid-cols-3"><TabsTrigger className="tap" value="upcoming">{t.schedule.upcoming}</TabsTrigger><TabsTrigger className="tap" value="results">{t.schedule.results}</TabsTrigger><TabsTrigger className="tap" value="saved">{t.schedule.saved}</TabsTrigger></TabsList>
-      <TabsContent value="upcoming"><FollowedSchedule data={data} matches={upcoming} />{emptyTeams.length > 0 && <ul className="mt-4 space-y-2">{emptyTeams.map((team) => <li key={team.id} className="border-t py-3"><Link to="/teams/$teamId" params={{ teamId: team.id }} className="tap inline-flex items-center font-semibold text-primary">{team.name}</Link><p className="text-sm text-muted-foreground">{t.schedule.teamNoUpcoming}</p></li>)}</ul>}</TabsContent>
+      <TabsContent value="upcoming"><ScheduleCalendar data={data} matches={matches.filter((m) => m.status !== "final")} follows={follows} />{emptyTeams.length > 0 && <ul className="mt-4 space-y-2">{emptyTeams.map((team) => <li key={team.id} className="border-t py-3"><Link to="/teams/$teamId" params={{ teamId: team.id }} className="tap inline-flex items-center font-semibold text-primary">{team.name}</Link><p className="text-sm text-muted-foreground">{t.schedule.teamNoUpcoming}</p></li>)}</ul>}</TabsContent>
       <TabsContent value="results"><FollowedSchedule data={data} matches={results} results /></TabsContent>
       <TabsContent value="saved" className="space-y-6">
     {teams.length > 0 && <section><h2 className="text-2xl font-bold uppercase">{t.follow.teams}</h2><ul className="mt-2 space-y-2">{teams.map((team) => <li key={team.id} className="flex items-center gap-3 rounded-lg bg-card p-3"><Link className="min-w-0 flex-1 font-semibold" to="/teams/$teamId" params={{ teamId: team.id }}>{team.name}</Link><FollowButton item={{ type: "team", id: team.id }} name={team.name} /></li>)}</ul></section>}
