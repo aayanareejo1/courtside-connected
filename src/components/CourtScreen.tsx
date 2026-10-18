@@ -47,14 +47,10 @@ export function CourtScreen({ court, courts, areas, venue, matches, sources, sav
     </section>
     {court.stream_url && <a href={court.stream_url} target="_blank" rel="noreferrer" className="tap flex items-center justify-center gap-2 rounded-lg bg-destructive p-3 font-semibold text-destructive-foreground"><Video className="h-5 w-5 shrink-0" aria-hidden />{t.court.watch}</a>}
     <SourceBadges matches={matches} sources={sources} savedAt={savedAt} />
-    <p className="text-sm text-muted-foreground">{t.schedule.timezone}</p>
-    <section aria-label={schedule.current ? t.court.now : t.court.next}>
-      <h2 className="mb-2 text-2xl font-bold uppercase text-primary">{schedule.current ? t.court.now : t.court.next}</h2>
-      {schedule.featured ? <MatchRow m={schedule.featured} /> : <p className="text-muted-foreground">{t.court.none}</p>}
-    </section>
-    <section aria-label={t.court.nextThree}>
-      <h2 className="mb-2 text-2xl font-bold uppercase">{t.court.nextThree}</h2>
-      {schedule.nextThree.length ? <ul className="space-y-2">{schedule.nextThree.map(m => <li key={m.id}><MatchRow m={m} /></li>)}</ul> : <p className="text-muted-foreground">{t.court.none}</p>}
+    <section aria-label={t.court.comingUp}>
+      <h2 className="mb-2 text-2xl font-bold uppercase">{t.court.comingUp}</h2>
+      {schedule.featured ? <div className="rounded-lg border-2 border-primary bg-primary/5 p-1"><MatchRow m={schedule.featured} featured /></div> : <p className="text-muted-foreground">{t.court.none}</p>}
+      {schedule.nextThree.length > 0 && <ul className="mt-2 space-y-2">{schedule.nextThree.map(m => <li key={m.id}><MatchRow m={m} /></li>)}</ul>}
     </section>
     {!!schedule.finals.length && <section aria-label={t.court.results}>
       <h2 className="mb-2 text-2xl font-bold uppercase">{t.court.results}</h2>
@@ -63,12 +59,12 @@ export function CourtScreen({ court, courts, areas, venue, matches, sources, sav
   </div>;
 }
 
-function MatchRow({ m }: { m: CourtScreenMatch }) {
+function MatchRow({ m, featured = false }: { m: CourtScreenMatch; featured?: boolean }) {
   const r = Array.isArray(m.results) ? m.results[0] : m.results;
   return <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg bg-card p-3">
     <div className="min-w-0">
-      <p className="text-xs text-muted-foreground">{eventDateLabel(m.start_at)}</p>
-      <MatchTime value={m.start_at} estimated={m.time_estimated} className="font-display text-xl font-bold" />
+      <p className="text-xs text-muted-foreground">{eventDateLabel(m.start_at)}{m.status === "live" ? ` · ${t.team.live}` : ""}</p>
+      <MatchTime value={m.start_at} estimated={m.time_estimated} className={featured ? "font-display text-3xl font-bold text-primary" : "font-display text-xl font-bold"} />
       {m.time_estimated && <span className="ml-2 text-xs text-muted-foreground">{t.schedule.estimatedShort}</span>}
       <p className="mt-1 break-words text-sm">{m.home?.name ?? t.court.tbd} <span className="text-muted-foreground">{t.court.vs}</span> {m.away?.name ?? t.court.tbd}</p>
     </div>

@@ -67,7 +67,7 @@ function Home() {
         <Button asChild variant="outline" className="h-auto min-h-12 whitespace-normal"><Link to="/info"><MapPin className="shrink-0" aria-hidden />{t.home.findPlaces}</Link></Button>
       </div>
       <RegisterButton url={event.registration_url} live={event.registration_live} />
-      <AnnouncementBanner announcements={generalAnnouncements(data.announcements)} />
+      {(() => { const all = generalAnnouncements(data.announcements); const recent = new Set([...all].sort((a, b) => Date.parse(b.created_at ?? "") - Date.parse(a.created_at ?? "")).slice(0, 3).map((a) => a.id)); const shown = all.filter((a) => recent.has(a.id)); return shown.length ? <div><AnnouncementBanner announcements={shown} />{all.length > 3 && <Link to="/announcements" className="tap inline-flex min-h-11 items-center text-sm font-semibold text-primary underline-offset-4 hover:underline">{t.announcements.seeAll}</Link>}</div> : null; })()}
       <HomeMap />
       {data.slots.filter((slot) => slot.placement === "banner" && slot.sponsors).map((slot) => <SponsorCard key={slot.id} slot={slot} />)}
 
@@ -84,7 +84,6 @@ function Home() {
             })}
           </ul>
         </section>
-        <p className="border-t pt-4 text-sm text-muted-foreground">{t.privacy.note}</p>
       </div>
     );
 }

@@ -1,7 +1,6 @@
 import { appNow } from "@/lib/clock";
 import { useEffect, useState } from 'react';
 import { Link } from '@tanstack/react-router';
-import { SourceBadges } from '@/components/SourceBadges';
 import { MatchTime } from '@/components/MatchDetails';
 import { homeSummary } from '@/lib/home-summary';
 import { recommendedArrivalTime } from '@/lib/schedule';
@@ -29,10 +28,7 @@ export function HomeOverview({ data }: { data: EventData }) {
           <span>{t.schedule.arrive} <MatchTime value={recommendedArrivalTime(match.start_at)} arrival /></span>
         </p>
       </> : <p className="text-sm">{summary.personal ? t.schedule.noUpcoming : t.demo.noNext}</p>}
-      <Link to={summary.personal ? '/following' : '/search'} className="tap inline-flex items-center text-sm font-semibold text-primary underline">{summary.personal ? t.schedule.title : t.home.findPeople}</Link>
-    </div>
-    <div><h2 className="text-xl font-bold uppercase">{t.demo.dataStatus}</h2>
-      <SourceBadges matches={data.matches.length ? data.matches : data.sources.map(s => ({ source_id: s.id }))} sources={data.sources} savedAt={data.offlineSavedAt} />
+      {summary.personal && <Link to="/following" className="tap inline-flex items-center text-sm font-semibold text-primary underline">{t.schedule.title}</Link>}
     </div>
   </section>;
 }

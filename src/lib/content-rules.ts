@@ -6,10 +6,11 @@ export function safeExternalUrl(value: string | null | undefined): string | unde
   } catch { return undefined; }
 }
 
-export function activeAnnouncements<T extends { published: boolean; starts_at: string | null; ends_at: string | null; severity: string }>(rows: T[], now: number): T[] {
+export function activeAnnouncements<T extends { published: boolean; starts_at: string | null; ends_at: string | null; severity: string; created_at?: string | null }>(rows: T[], now: number): T[] {
   const priority: Record<string, number> = { urgent: 0, important: 1, info: 2 };
+  const posted = (row: T) => (row.created_at ? Date.parse(row.created_at) : 0);
   return rows.filter((row) => row.published && (!row.starts_at || Date.parse(row.starts_at) <= now) && (!row.ends_at || Date.parse(row.ends_at) > now))
-    .sort((a, b) => (priority[a.severity] ?? 2) - (priority[b.severity] ?? 2));
+    .sort((a, b) => (priority[a.severity] ?? 2) - (priority[b.severity] ?? 2) || posted(b) - posted(a));
 }
 
 type Targeted = { division_id?: string | null; area_id?: string | null };

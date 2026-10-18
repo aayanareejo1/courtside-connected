@@ -14,8 +14,8 @@ describe('Court screen outcomes',()=>{
  it('keeps matches visible without any map position or pin',()=>{
   render(<CourtScreen {...props} court={courts[1]!} />);
   expect(screen.queryByRole('group',{name:'Venue map'})).toBeNull();
-  expect(within(screen.getByRole('region',{name:'Up next'})).getByText(/Home 0/)).toBeDefined();
-  expect(within(screen.getByRole('region',{name:'Next three matches'})).getAllByRole('listitem')).toHaveLength(3);
+  expect(within(screen.getByRole('region',{name:'Coming up'})).getByText(/Home 0/)).toBeDefined();
+  expect(within(screen.getByRole('region',{name:'Coming up'})).getAllByRole('listitem')).toHaveLength(3);
  });
  it('highlights the selected court pin and routes number search to the matching court',()=>{
   render(<CourtScreen {...props} court={courts[0]!} />);
