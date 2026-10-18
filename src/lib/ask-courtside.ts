@@ -110,7 +110,7 @@ export function intents(question: string): Intent {
   };
 }
 
-export type Facts = { text: string; playerLines: string[]; matchLines: string[]; links: AskLink[]; qty: number | null; intent: Intent };
+export type Facts = { text: string; playerLines: string[]; matchLines: string[]; nextLines: string[]; dayLines: string[]; links: AskLink[]; qty: number | null; intent: Intent };
 
 export function buildFacts(data: AskData, content: AskContent, req: { question: string; follows: Follow[] }, now: number): Facts {
   const qty = parseQuantity(req.question);
@@ -133,15 +133,20 @@ export function buildFacts(data: AskData, content: AskContent, req: { question: 
   const byDay = dayKey ? data.matches.filter((m) => eventDateKey(m.start_at) === dayKey && m.status !== "cancelled") : [];
   const picked = [...new Map([...upcomingMatches(pool, now).slice(0, 10), ...byDay.slice(0, 20), ...(focus.length ? focus.filter((m) => m.status === "final").slice(-3) : [])].map((m) => [m.id, m])).values()]
     .sort((a, b) => Date.parse(a.start_at) - Date.parse(b.start_at));
-  const calendar = new Map(buildCalendar(personal.length ? personal : picked).flatMap((d) => d.matches).map((c) => [c.match.id, c]));
+  // Clash and tight turnaround only mean something for matches the fan follows.
+  const calendar = new Map(buildCalendar(personal).flatMap((d) => d.matches).map((c) => [c.match.id, c]));
 
-  const matchLines = picked.map((m) => {
+  const line = (m: Match) => {
     const c = calendar.get(m.id);
     const src = t.home.provenance[asProvenance(data.sources.find((s) => s.id === m.source_id)?.last_provenance)];
     const r = Array.isArray(m.results) ? m.results[0] : m.results;
     const flags = [c?.clashWith.length ? "CLASH with another followed match" : "", c?.tightWith.length ? "TIGHT TURNAROUND" : ""].filter(Boolean).join(", ");
     return `${eventDateLabel(m.start_at)} ${eventTime(m.start_at)} | ${team(m.home_team_id)?.name ?? "TBD"} vs ${team(m.away_team_id)?.name ?? "TBD"} | ${court(m)} | ${m.status}${r ? ` ${r.home_sets}-${r.away_sets}` : ""} | be at the court by ${eventTime(new Date(Date.parse(m.start_at) - 15 * 60_000))}${flags ? ` | ${flags}` : ""} | ${src}`;
-  });
+  };
+  const matchLines = picked.map(line);
+  const upcomingIds = new Set(upcomingMatches(picked, now).map((m) => m.id));
+  const nextLines = picked.filter((m) => upcomingIds.has(m.id)).map(line);
+  const dayLines = dayKey ? picked.filter((m) => eventDateKey(m.start_at) === dayKey).map(line) : [];
   const playerLines = people.map((p) => {
     const tm = team(p.team_id);
     const club = data.clubs?.find((c) => c.id === tm?.club_id)?.name;
@@ -159,7 +164,7 @@ export function buildFacts(data: AskData, content: AskContent, req: { question: 
     `SPONSOR AND MEDIA FACTS:\n${SPONSOR_FACTS.join("\n")}`,
     `LINKS (the only URLs you may use):\n${links.map((l) => `[${l.category}] ${l.title} | ${l.url} | ${l.useFor}`).join("\n")}`,
   ].join("\n\n");
-  return { text, playerLines, matchLines, links, qty, intent };
+  return { text, playerLines, matchLines, nextLines, dayLines, links, qty, intent };
 }
 
 export const SYSTEM_PROMPT = [
@@ -202,7 +207,8 @@ export function fallbackAnswer(facts: Facts): { answer: string; links: { title: 
   const used: AskLink[] = [];
   const cite = (l: AskLink | undefined, lead: string) => { if (l) { used.push(l); parts.push(`${lead} [${l.title}](${l.url})`); } };
   if (facts.playerLines.length) parts.push(`${facts.playerLines[0]}.`);
-  if (facts.matchLines.length && (facts.playerLines.length || !(i.sponsor || i.hotel || i.merch || i.raffle))) parts.push(`Next: ${facts.matchLines[0]}.`);
+  const shown = i.day && facts.dayLines.length ? facts.dayLines.slice(0, 3) : facts.nextLines.slice(0, 1);
+  if (shown.length && (facts.playerLines.length || i.tickets || !(i.sponsor || i.hotel || i.merch || i.raffle))) parts.push(`${i.day ? `Games ${i.day}` : "Next"}:\n${shown.join("\n")}`);
   if (i.tickets) cite(link("tickets") ?? link("event"), `${facts.qty ? `For ${facts.qty} tickets, use` : "For tickets, use"}`);
   if (i.sponsor) { parts.push(SPONSOR_FACTS[0]!); cite(link("sponsor"), "More:"); }
   if (i.hotel) cite(link("hotel"), "Hotels:");
