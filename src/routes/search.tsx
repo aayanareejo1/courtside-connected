@@ -1,3 +1,5 @@
+import { SourceBadges } from "@/components/SourceBadges";
+import { ScheduleSkeleton } from "@/components/ScheduleSkeleton";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Search, X, ChevronRight } from "lucide-react";
@@ -19,7 +21,9 @@ export const Route = createFileRoute("/search")({
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
   ] }),
   component: SearchPage,
-  pendingComponent: () => <p>{t.search.loading}</p>,
+  pendingComponent: ScheduleSkeleton,
+  pendingMs: 150,
+  notFoundComponent: () => <p role="alert">{t.search.error}</p>,
   errorComponent: () => <p role="alert">{t.search.error}</p>,
 });
 
@@ -52,6 +56,6 @@ function SearchPage() {
     {teams.length > 0 && <Group title={searching ? t.search.teams : t.search.browse}>{teams.map((team) => <li key={team.id} className="flex items-center gap-3 rounded-lg bg-card p-3"><Link className="min-w-0 flex-1" to="/teams/$teamId" params={{ teamId: team.id }}><p className="font-semibold">{team.name}</p><p className="text-sm text-muted-foreground">{team.divisions.name}</p></Link><FollowButton item={{ type: "team", id: team.id }} name={team.name} /></li>)}</Group>}
     {clubs.length > 0 && <Group title={t.search.clubs}>{clubs.map((club) => <li key={club.id}><Link to="/search" search={{ q: club.name }} className="tap flex items-center justify-between rounded-lg bg-card p-3"><span><strong>{club.name}</strong><span className="block text-sm text-muted-foreground">{club.city}</span></span><ChevronRight className="h-5 w-5 shrink-0" aria-hidden /></Link></li>)}</Group>}
     {courts.length > 0 && <Group title={t.search.courts}>{courts.map((court) => <li key={court.id}><Link to="/courts/$courtId" params={{ courtId: court.id }} className="tap flex items-center justify-between rounded-lg bg-card p-3"><span>{t.map.court} {court.label} · {court.areas?.name}</span><ChevronRight className="h-5 w-5 shrink-0" aria-hidden /></Link></li>)}</Group>}
-    {matches.length > 0 && <Group title={t.search.matches}>{matches.map((match) => <li key={match.id} className="rounded-lg bg-card p-3"><p className="text-sm text-muted-foreground">{new Date(match.start_at).toLocaleString("en-CA", { timeZone: "America/Toronto", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</p><Link to="/teams/$teamId" params={{ teamId: match.home_team_id ?? match.away_team_id ?? "unknown" }} className="block py-1 font-semibold">{teamName(match.home_team_id)} {t.court.vs} {teamName(match.away_team_id)}</Link>{match.court_id && <Link to="/courts/$courtId" params={{ courtId: match.court_id }} className="text-sm text-primary">{t.map.court} {data.courts.find((court) => court.id === match.court_id)?.label}</Link>}</li>)}</Group>}
+    {matches.length > 0 && <section><h2 className="text-2xl font-bold uppercase">{t.search.matches}</h2><SourceBadges matches={matches} sources={data.sources} savedAt={data.offlineSavedAt} /><ul className="mt-2 space-y-2">{matches.map((match) => <li key={match.id} className="rounded-lg bg-card p-3"><p className="text-sm text-muted-foreground">{new Date(match.start_at).toLocaleString("en-CA", { timeZone: "America/Toronto", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</p><Link to="/teams/$teamId" params={{ teamId: match.home_team_id ?? match.away_team_id ?? "unknown" }} className="block py-1 font-semibold">{teamName(match.home_team_id)} {t.court.vs} {teamName(match.away_team_id)}</Link>{match.court_id && <Link to="/courts/$courtId" params={{ courtId: match.court_id }} className="text-sm text-primary">{t.map.court} {data.courts.find((court) => court.id === match.court_id)?.label}</Link>}</li>)}</ul></section>}
   </div>;
 }

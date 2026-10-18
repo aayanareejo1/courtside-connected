@@ -1,0 +1,27 @@
+import { describe, expect, it } from 'vitest';
+import { matchSourceNotices, sourceHealth, type MatchSource } from '../lib/source-status';
+import { t } from '../lib/i18n';
+const now = Date.parse('2026-10-18T02:00:00Z');
+const source: MatchSource = { id: 'timu', name: 'TIMU', last_status: 'ok', last_success_at: '2026-10-18T01:59:00Z', last_provenance: 'live' };
+const notice = (patch: Partial<MatchSource> = {}, savedAt: number | null = null) => matchSourceNotices([{ source_id: 'timu' }], [{ ...source, ...patch }], now, savedAt)[0];
+describe('match-list provenance', () => {
+  it.each([['live', 'Live from the source'], ['sample', 'Sample data, not live'], ['snapshot', 'Saved snapshot, not live'], ['metadata', 'Event check only, no live scores']])('maps %s to its exact label', (value, label) => { const item = notice({ last_provenance: value }); expect(item && t.home.provenance[item.provenance]).toBe(label); });
+  it('does not infer live from ok status', () => { expect(notice({ last_provenance: null })?.provenance).toBe('sample'); });
+  it('labels unknown provenance conservatively', () => { expect(notice({ last_provenance: 'archive' })?.provenance).toBe('sample'); });
+  it('covers missing source_id on old cached matches', () => { expect(matchSourceNotices([{}], [source], now)).toMatchObject([{ source: null, provenance: 'sample' }]); });
+  it('covers a deleted source without claiming live', () => { expect(matchSourceNotices([{ source_id: 'deleted' }], [source], now)[0]?.provenance).toBe('sample'); });
+  it('deduplicates badges per source, not match row', () => { expect(matchSourceNotices([{ source_id: 'timu' }, { source_id: 'timu' }], [source], now)).toHaveLength(1); });
+  it('keeps all sources in mixed lists', () => { const rows = [{ source_id: 'timu' }, { source_id: 'beach' }]; expect(matchSourceNotices(rows, [source, { ...source, id: 'beach', last_provenance: 'snapshot' }], now).map(x => x.provenance)).toEqual(['live', 'snapshot']); });
+  it('does not include sources absent from this list', () => { expect(matchSourceNotices([{ source_id: 'timu' }], [source, { ...source, id: 'unrelated' }], now)).toHaveLength(1); });
+  it('does not show badges for an empty list', () => { expect(matchSourceNotices([], [source], now)).toEqual([]); });
+  it('keeps failed source provenance and last successful update', () => { expect(notice({ last_status: 'error' })).toMatchObject({ health: 'failed', provenance: 'live', updatedAt: '2026-10-18T01:59:00Z' }); });
+  it('keeps stale source provenance and last successful update', () => { expect(notice({ last_success_at: '2026-10-18T01:40:00Z' })).toMatchObject({ health: 'stale', provenance: 'live', updatedAt: '2026-10-18T01:40:00Z' }); });
+  it('respects an explicit stale source status', () => { expect(notice({ last_status: 'stale' })?.health).toBe('stale'); });
+  it('never labels a device fallback live', () => { expect(notice({}, now - 60000)?.provenance).toBe('snapshot'); });
+  it('uses source update time rather than cache read/save time', () => { expect(notice({}, now)?.updatedAt).toBe('2026-10-18T01:59:00Z'); });
+  it('uses cache save time only when source time is absent', () => { expect(matchSourceNotices([{}], [], now, now)[0]?.updatedAt).toBe('2026-10-18T02:00:00.000Z'); });
+  it('covers never-synced sources', () => { expect(notice({ last_success_at: null })).toMatchObject({ health: 'never', updatedAt: null }); });
+  it('handles invalid timestamps without claiming freshness', () => { expect(notice({ last_success_at: 'invalid' })).toMatchObject({ health: 'never', updatedAt: null }); });
+  it('does not mutate or drop last-known matches on failure', () => { const rows = [{ source_id: 'timu' }]; const before = structuredClone(rows); matchSourceNotices(rows, [{ ...source, last_status: 'error' }], now); expect(rows).toEqual(before); expect(rows).toHaveLength(1); });
+  it('retains the ten-minute freshness boundary', () => { expect(sourceHealth({ ...source, last_success_at: '2026-10-18T01:50:00Z' }, now)).toBe('ok'); expect(sourceHealth({ ...source, last_success_at: '2026-10-18T01:49:59Z' }, now)).toBe('stale'); });
+});

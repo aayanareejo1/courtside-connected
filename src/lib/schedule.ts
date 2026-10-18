@@ -9,6 +9,25 @@ export function arrivalTime(start: string, warmup: number, walk: number) {
   return new Date(new Date(start).getTime() - (warmup + walk) * 60_000);
 }
 
+export const FAN_WARMUP_MINUTES = 10;
+export const FAN_WALK_MINUTES = 5;
+export const recommendedArrivalTime = (start: string) => arrivalTime(start, FAN_WARMUP_MINUTES, FAN_WALK_MINUTES);
+
+export function upcomingMatches<T extends ScheduledMatch>(matches: readonly T[], now: number): T[] {
+  return matches.filter((m) => m.status !== "final" && m.status !== "cancelled" &&
+    (Date.parse(m.start_at) >= now || (m.status === "live" && Date.parse(m.start_at) + m.est_duration_min * 60_000 > now)))
+    .sort((a, b) => Date.parse(a.start_at) - Date.parse(b.start_at));
+}
+
+export function tightTurnaround(a: ScheduledMatch, b: ScheduledMatch): boolean {
+  if (a.id === b.id || [a.status, b.status].some((s) => s === "final" || s === "cancelled")) return false;
+  return Math.abs(Date.parse(a.start_at) - Date.parse(b.start_at)) <= 30 * 60_000;
+}
+
+export function teamsWithoutUpcoming<T extends { id: string }>(teams: readonly T[], upcoming: readonly ScheduledMatch[]): T[] {
+  return teams.filter((team) => !upcoming.some((m) => m.home_team_id === team.id || m.away_team_id === team.id));
+}
+
 function courtKey(match: ScheduledMatch) {
   return match.court_id ?? match.court_label_raw?.trim().toLowerCase() ?? null;
 }

@@ -24,3 +24,18 @@
 - Item 12 (staff): aayanareejo@gmail.com invited and granted staff. Publish/delete test pending first sign-in.
 - Phase 1 checks: axe found 0 violations on /, /search, /following, /info, /sponsors, 404; no horizontal scroll at 390px. /auth and the staff form still need a signed-in pass.
 - Phase 2 (AI assistant): see plan agreed with the team before building.
+
+## Current step
+- [x] Add docs/demo-checklist.md; complete lovable d8a1f4f checks: 155 tests/20 files PASS; production build PASS; tsgo FAIL (12 errors/5 files). No app, configuration, deployment or SQL changes.
+- [ ] Resolve reported strict-type diagnostics in a separate step; hosted routes, two-minute scheduler and staff sign-in require hosted evidence/session.
+- [x] Court lookup by number, highlighted area/pin, current-or-next plus next three matches, and missing-position safety. 76 tests passed (19 Court tests plus 57 regressions); isolated component browser checks passed at 375px and 1280px with 44px lookup targets, no overflow or page errors. Hosted checks await review/merge; no SQL or deployment changes.
+- [x] Verify device-only team/player follows: public signed-out browser confirmed both follow clicks send zero requests, persistence after reload, Toronto times, sorted matches and final scores. Added future-start filtering, fixed fan arrival lead, per-team empty states, tight-turnaround notes and blocked-storage fallback. 57 tests passed across five suites (22 new follow/schedule tests, 35 existing checks).
+- [ ] Verify changed tight-turnaround and empty-team views on hosted lovable code after review/merge; public app currently runs older main code. No SQL or deployment changes.
+- [x] Audit provenance across Home, Schedule, Team, Court, Search and Follows: list-level source badges, last successful update times, conservative missing-source and device-snapshot labels. 22 label tests passed; no SQL or deployment changes.
+- [ ] Review lovable changes before merging; hosted verification pending merge.
+
+## Real source adapters (branch real_sources)
+- MyTeam: `mapMyteam` (pure, tested). Live only when the source config has `schedule_id`. Pairs become initials. Past dates are labelled snapshot, re-dated data is labelled sample.
+- AES: `mapAesSchedule` (pure, tested). Live only when config has `schedule_dates`; never deletes rows. Server requests currently get HTTP 403, so it stays off until OVA authorizes access.
+- TIMU: provenance now follows the data date (past is snapshot, re-dated is sample).
+- Config switches live in `supabase/real-sources-config.sql`. These are undocumented public endpoints; get OVA authorization before relying on them.
