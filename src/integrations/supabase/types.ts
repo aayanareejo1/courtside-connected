@@ -540,6 +540,7 @@ export type Database = {
           error: string | null
           finished_at: string | null
           id: string
+          provenance: string
           rows_upserted: number
           source_id: string
           started_at: string
@@ -549,6 +550,7 @@ export type Database = {
           error?: string | null
           finished_at?: string | null
           id?: string
+          provenance?: string
           rows_upserted?: number
           source_id: string
           started_at?: string
@@ -558,6 +560,7 @@ export type Database = {
           error?: string | null
           finished_at?: string | null
           id?: string
+          provenance?: string
           rows_upserted?: number
           source_id?: string
           started_at?: string
@@ -579,6 +582,7 @@ export type Database = {
           created_at: string
           id: string
           kind: string
+          last_provenance: string
           last_status: string
           last_success_at: string | null
           name: string
@@ -588,6 +592,7 @@ export type Database = {
           created_at?: string
           id?: string
           kind: string
+          last_provenance?: string
           last_status?: string
           last_success_at?: string | null
           name: string
@@ -597,6 +602,7 @@ export type Database = {
           created_at?: string
           id?: string
           kind?: string
+          last_provenance?: string
           last_status?: string
           last_success_at?: string | null
           name?: string

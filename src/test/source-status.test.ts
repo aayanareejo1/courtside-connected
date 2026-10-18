@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { sourceHealth } from "@/lib/source-status";
+import { asProvenance, sourceHealth } from "@/lib/source-status";
 import { adapters } from "@/server/adapters";
 
 const now = Date.parse("2026-10-17T20:00:00Z");
@@ -24,5 +24,36 @@ describe("mock adapters", () => {
   });
   it("fail loudly when a source is down", async () => {
     await expect(adapters.timu.fetch({ id: "s", kind: "timu", name: "TIMU", config: { simulate_failure: true } })).rejects.toThrow();
+  });
+});
+
+describe("provenance", () => {
+  const timu = { id: "s", kind: "timu", name: "TIMU", config: {} };
+  it("labels the sample TIMU fixture as sample, not live", async () => {
+    expect(adapters.timu.map(await adapters.timu.fetch(timu)).provenance).toBe("sample");
+  });
+  it("labels AES check, Speer CSV and MyTeam beach honestly", async () => {
+    const aes = { id: "s", kind: "aes", name: "AES", config: {} };
+    expect(adapters.aes.map(await adapters.aes.fetch(aes)).provenance).toBe("sample");
+    expect(adapters.speer.map(await adapters.speer.fetch({ ...aes, kind: "speer" })).provenance).toBe("sample");
+    expect(adapters.myteam.map(await adapters.myteam.fetch({ ...aes, kind: "myteam" })).provenance).toBe("snapshot");
+  });
+  it("labels only parsed live TIMU results as live", () => {
+    const out = adapters.timu.map({ games: [], live: true });
+    expect(out.provenance).toBe("live");
+  });
+  it("errors instead of falling back to sample data when a configured live TIMU fetch fails", async () => {
+    const original = globalThis.fetch;
+    globalThis.fetch = (async () => new Response("no", { status: 503 })) as typeof fetch;
+    try {
+      await expect(adapters.timu.fetch({ ...timu, config: { live_tid: "3960" } })).rejects.toThrow("503");
+    } finally {
+      globalThis.fetch = original;
+    }
+  });
+  it("treats unknown values as sample", () => {
+    expect(asProvenance("whatever")).toBe("sample");
+    expect(asProvenance(null)).toBe("sample");
+    expect(asProvenance("live")).toBe("live");
   });
 });

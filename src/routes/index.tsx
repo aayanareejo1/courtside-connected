@@ -1,4 +1,4 @@
-import { sourceHealth } from "@/lib/source-status";
+import { asProvenance, sourceHealth } from "@/lib/source-status";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { t } from "@/lib/i18n";
@@ -73,12 +73,12 @@ function Home() {
         <h2 id="days" className="text-2xl font-bold uppercase">{t.home.days}</h2>
         <ul className="mt-2 space-y-2">
           {event.event_days.map((d) => {
-            const src = d.day_division_sources[0]?.sources as { name: string; last_success_at: string | null; last_status: string | null } | undefined;
+            const src = d.day_division_sources[0]?.sources as { name: string; last_success_at: string | null; last_status: string | null; last_provenance: string | null } | undefined;
             const health = src ? sourceHealth(src, Date.now()) : "never";
             return (
               <li key={d.id} className="flex items-center justify-between rounded-xl bg-card p-3">
                 <span className="font-semibold">{d.label} <span className="font-normal text-muted-foreground">{d.date}</span></span>
-                <span className="text-right text-xs text-muted-foreground">{t.home.source} {src?.name}<br />{timeAgo(src?.last_success_at ?? null)}{health === "failed" && <><br /><span role="status" className="font-semibold text-destructive">{t.home.failed}</span></>}{health === "stale" && <><br /><span className="font-semibold text-foreground">{t.home.stale}</span></>}</span>
+                <span className="text-right text-xs text-muted-foreground">{t.home.source} {src?.name}<br />{timeAgo(src?.last_success_at ?? null)}{src && health !== "never" && <><br /><span data-provenance={asProvenance(src.last_provenance)}>{t.home.provenance[asProvenance(src.last_provenance)]}</span></>}{health === "failed" && <><br /><span role="status" className="font-semibold text-destructive">{t.home.failed}</span></>}{health === "stale" && <><br /><span className="font-semibold text-foreground">{t.home.stale}</span></>}</span>
               </li>
               );
             })}

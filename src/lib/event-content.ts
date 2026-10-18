@@ -8,7 +8,7 @@ export const eventContentQuery = queryOptions({
   refetchInterval: 30_000,
   queryFn: async () => {
     const { data: event, error } = await supabase.from("events")
-      .select("id,name,starts_on,ends_on,registration_url,registration_live,venues(name,address,courts(count)),event_days(id,label,date,day_division_sources(sources(name,last_success_at,last_status)))")
+      .select("id,name,starts_on,ends_on,registration_url,registration_live,venues(name,address,courts(count)),event_days(id,label,date,day_division_sources(sources(name,last_success_at,last_status,last_provenance)))")
       .eq("published", true).limit(1).single();
     if (error) throw error;
     const [info, slots, announcements] = await Promise.all([

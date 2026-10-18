@@ -224,3 +224,9 @@ ALTER TABLE public.announcements ADD COLUMN IF NOT EXISTS area_id uuid REFERENCE
 ALTER TABLE public.matches ADD COLUMN IF NOT EXISTS pool text;
 ALTER TABLE public.matches ADD COLUMN IF NOT EXISTS time_estimated boolean NOT NULL DEFAULT false;
 COMMENT ON COLUMN public.matches.time_estimated IS 'True when the source gives no exact start time (TIMU round estimates); the UI must label it.';
+
+-- Honest data labels: record what kind of data each sync produced.
+ALTER TABLE public.sources ADD COLUMN IF NOT EXISTS last_provenance text NOT NULL DEFAULT 'sample'
+  CHECK (last_provenance IN ('live','sample','snapshot','metadata'));
+ALTER TABLE public.source_runs ADD COLUMN IF NOT EXISTS provenance text NOT NULL DEFAULT 'sample'
+  CHECK (provenance IN ('live','sample','snapshot','metadata'));

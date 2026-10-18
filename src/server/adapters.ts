@@ -1,11 +1,12 @@
 // Source adapters: each maps one platform's payload into canonical rows.
 // Mock adapters return the same shape a live source would; swap `fetch` for a real HTTP call later.
 import { mapTimu, parseTimuHtml, parseRosterCsv, type CanonicalMatch, type RosterTeam, type TimuGame } from "@/lib/source-mapping";
+import type { Provenance } from "@/lib/source-status";
 import { timuDay1 } from "@/server/fixtures/timu-day1";
 import { speerRosterCsv } from "@/server/fixtures/speer-roster";
 
 export type StatusUpdate = { external_id: string; status: string };
-export type AdapterResult = { createMissingTeams?: string; replaceSourceMatches?: boolean; statusUpdates?: StatusUpdate[]; matches?: CanonicalMatch[]; rosters?: RosterTeam[] };
+export type AdapterResult = { provenance: Provenance; createMissingTeams?: string; replaceSourceMatches?: boolean; statusUpdates?: StatusUpdate[]; matches?: CanonicalMatch[]; rosters?: RosterTeam[] };
 export type SourceRow = { id: string; kind: string; name: string; config: Record<string, unknown> | null };
 
 export interface SourceAdapter {
@@ -19,22 +20,24 @@ const failIfSimulated = (source: SourceRow) => {
 };
 
 type StatusPayload = { games?: { ref: string; state: string }[] };
-const statusMap = (payload: unknown): AdapterResult => ({
+const statusMap = (provenance: Provenance) => (payload: unknown): AdapterResult => ({
+  provenance,
   statusUpdates: ((payload as StatusPayload).games ?? []).map((g) => ({ external_id: g.ref, status: g.state })),
 });
 
-function statusMockAdapter(kind: string): SourceAdapter {
+function statusMockAdapter(kind: string, provenance: Provenance): SourceAdapter {
   return {
     kind,
     async fetch(source) {
       failIfSimulated(source);
       return { games: (source.config?.["mock_games"] as StatusPayload["games"]) ?? [] } satisfies StatusPayload;
     },
-    map: statusMap,
+    map: statusMap(provenance),
   };
 }
 
-// TIMU: live results.php when config.live_tid is set, otherwise (or on any live failure) the mock Day 1 fixture.
+// TIMU: live results.php when config.live_tid is set, otherwise the sample Day 1 fixture.
+// A live failure throws, so the run is recorded as an error and the last known data stays in place.
 const timuMock: SourceAdapter = {
   kind: "timu",
   async fetch(source) {
@@ -53,15 +56,15 @@ const timuMock: SourceAdapter = {
       if (typeof day === "string") parsed.games.forEach((g) => (g.date = day));
       return { ...parsed, live: true };
     } catch (e) {
-      console.error("TIMU live failed, using mock", e);
-      return timuDay1;
+      console.error("TIMU live failed", e);
+      throw e instanceof Error ? e : new Error("TIMU live fetch failed");
     }
   },
   map: (payload) => {
     const p = payload as { games: TimuGame[]; live?: boolean };
     const matches = mapTimu(p);
     // Live TIMU teams are new to the app: create them in the division and drop the sample matches.
-    return p.live ? { matches, createMissingTeams: matches[0]?.division ?? "", replaceSourceMatches: true } : { matches };
+    return p.live ? { provenance: "live", matches, createMissingTeams: matches[0]?.division ?? "", replaceSourceMatches: true } : { provenance: "sample", matches };
   },
 };
 
@@ -72,27 +75,27 @@ const speerMock: SourceAdapter = {
     failIfSimulated(source);
     return speerRosterCsv;
   },
-  map: (payload) => ({ rosters: parseRosterCsv(String(payload)) }),
+  map: (payload) => ({ provenance: "sample", rosters: parseRosterCsv(String(payload)) }),
 };
 
-// Live AES check: confirms the public event endpoint, then applies mock Day 2 status updates.
+// AES check: confirms the public event endpoint (metadata only, no matches or scores), then applies sample status updates.
 const aesLive: SourceAdapter = {
   kind: "aes",
   async fetch(source) {
     const key = source.config?.["event_key"];
-    if (typeof key !== "string") return statusMockAdapter("aes").fetch(source);
+    if (typeof key !== "string") return statusMockAdapter("aes", "sample").fetch(source);
     const res = await fetch(`https://results.advancedeventsystems.com/api/event/${key}`, { headers: { accept: "application/json" } });
     if (!res.ok) throw new Error(`AES responded ${res.status}`);
     const body = (await res.json()) as { Key?: string };
     if (body.Key !== key) throw new Error("AES returned a different event");
     return { games: (source.config?.["mock_games"] as StatusPayload["games"]) ?? [] } satisfies StatusPayload;
   },
-  map: statusMap,
+  map: statusMap("sample"),
 };
 
 export const adapters = {
   timu: timuMock,
   aes: aesLive,
-  myteam: statusMockAdapter("myteam"),
+  myteam: statusMockAdapter("myteam", "snapshot"),
   speer: speerMock,
 } satisfies Record<string, SourceAdapter>;
