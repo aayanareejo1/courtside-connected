@@ -1,5 +1,5 @@
 export const pageHead = (title: string, description: string) => ({ meta: [
-  { title: `${title} — Courtside Connected` }, { name: "description", content: description },
-  { property: "og:title", content: `${title} — Courtside Connected` }, { property: "og:description", content: description },
+  { title: `${title} - OVAchamps` }, { name: "description", content: description },
+  { property: "og:title", content: `${title} - OVAchamps` }, { property: "og:description", content: description },
   { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
 ] });

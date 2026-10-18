@@ -7,9 +7,9 @@ import { t } from "@/lib/i18n";
 
 export const Route = createFileRoute("/reset-password")({
   head: () => ({ meta: [
-    { title: "Set staff password · Courtside Connected" },
+    { title: "Set staff password · OVAchamps" },
     { name: "description", content: "Set a staff password from your invitation or reset email." },
-    { property: "og:title", content: "Set staff password · Courtside Connected" },
+    { property: "og:title", content: "Set staff password · OVAchamps" },
     { property: "og:description", content: "Set a staff password from your invitation or reset email." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
     { name: "robots", content: "noindex" },

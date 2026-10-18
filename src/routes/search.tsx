@@ -14,9 +14,9 @@ export const Route = createFileRoute("/search")({
   validateSearch: (search: Record<string, unknown>): { q: string; division?: string } => ({ q: typeof search["q"] === "string" ? search["q"] : "", ...(typeof search["division"] === "string" && search["division"] ? { division: search["division"] } : {}) }),
   loader: ({ context }) => context.queryClient.ensureQueryData(eventDataQuery),
   head: () => ({ meta: [
-    { title: "Find people & places — Courtside Connected" },
+    { title: "Find people & places - OVAchamps" },
     { name: "description", content: "Find a player, team, club, court or match at OVA events." },
-    { property: "og:title", content: "Find people & places — Courtside Connected" },
+    { property: "og:title", content: "Find people & places - OVAchamps" },
     { property: "og:description", content: "Find players, teams, clubs and courts at OVA events." },
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
   ] }),
@@ -57,7 +57,7 @@ function SearchPage() {
       {[{ name: "", label: t.filters.all }, ...divisions.map((name) => ({ name, label: name }))].map((d) => <Button key={d.name || "all"} type="button" size="sm" variant={(division ?? "") === d.name ? "default" : "outline"} className="tap" aria-pressed={(division ?? "") === d.name} onClick={() => navigate({ search: { q, ...(d.name ? { division: d.name } : {}) } })}>{d.label}</Button>)}
     </div>}
     {searching && !players.length && !teams.length && !clubs.length && !courts.length && !matches.length && <p role="status" className="text-muted-foreground">{t.search.empty}</p>}
-    {players.length > 0 && <Group title={t.search.players}>{players.map((p) => <li key={p.id} className="flex items-center gap-3 rounded-lg bg-card p-3"><Link to="/teams/$teamId" params={{ teamId: p.team_id }} className="min-w-0 flex-1"><p className="font-semibold">{playerName(p.display_name)} <span className="text-primary">#{p.jersey_number ?? "—"}</span></p><p className="text-sm text-muted-foreground">{teamName(p.team_id)}</p></Link><FollowButton item={{ type: "player", id: p.id }} name={playerName(p.display_name)} /></li>)}</Group>}
+    {players.length > 0 && <Group title={t.search.players}>{players.map((p) => <li key={p.id} className="flex items-center gap-3 rounded-lg bg-card p-3"><Link to="/teams/$teamId" params={{ teamId: p.team_id }} className="min-w-0 flex-1"><p className="font-semibold">{playerName(p.display_name)} <span className="text-primary">#{p.jersey_number ?? "-"}</span></p><p className="text-sm text-muted-foreground">{teamName(p.team_id)}</p></Link><FollowButton item={{ type: "player", id: p.id }} name={playerName(p.display_name)} /></li>)}</Group>}
     {teams.length > 0 && <Group title={searching ? t.search.teams : t.search.browse}>{teams.map((team) => <li key={team.id} className="flex items-center gap-3 rounded-lg bg-card p-3"><Link className="min-w-0 flex-1" to="/teams/$teamId" params={{ teamId: team.id }}><p className="font-semibold">{team.name}</p><p className="text-sm text-muted-foreground">{team.divisions.name}</p></Link><FollowButton item={{ type: "team", id: team.id }} name={team.name} /></li>)}</Group>}
     {clubs.length > 0 && <Group title={t.search.clubs}>{clubs.map((club) => <li key={club.id}><Link to="/search" search={{ q: club.name }} className="tap flex items-center justify-between rounded-lg bg-card p-3"><span><strong>{club.name}</strong><span className="block text-sm text-muted-foreground">{club.city}</span></span><ChevronRight className="h-5 w-5 shrink-0" aria-hidden /></Link></li>)}</Group>}
     {courts.length > 0 && <Group title={t.search.courts}>{courts.map((court) => <li key={court.id}><Link to="/courts/$courtId" params={{ courtId: court.id }} className="tap flex items-center justify-between rounded-lg bg-card p-3"><span>{t.map.court} {court.label} · {court.areas?.name}</span><ChevronRight className="h-5 w-5 shrink-0" aria-hidden /></Link></li>)}</Group>}

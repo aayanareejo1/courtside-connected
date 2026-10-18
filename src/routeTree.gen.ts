@@ -18,6 +18,7 @@ import { Route as InfoRouteImport } from './routes/info'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as SponsorsRouteImport } from './routes/sponsors'
+import { Route as VenueRouteImport } from './routes/venue'
 import { Route as AuthenticatedStaffRouteImport } from './routes/_authenticated/staff'
 import { Route as CourtsCourtIdRouteImport } from './routes/courts.$courtId'
 import { Route as TeamsTeamIdRouteImport } from './routes/teams.$teamId'
@@ -68,6 +69,11 @@ const SponsorsRoute = SponsorsRouteImport.update({
   path: '/sponsors',
   getParentRoute: () => rootRouteImport,
 } as any)
+const VenueRoute = VenueRouteImport.update({
+  id: '/venue',
+  path: '/venue',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedStaffRoute = AuthenticatedStaffRouteImport.update({
   id: '/staff',
   path: '/staff',
@@ -104,6 +110,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/sponsors': typeof SponsorsRoute
+  '/venue': typeof VenueRoute
   '/staff': typeof AuthenticatedStaffRoute
   '/courts/$courtId': typeof CourtsCourtIdRoute
   '/teams/$teamId': typeof TeamsTeamIdRoute
@@ -119,6 +126,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/sponsors': typeof SponsorsRoute
+  '/venue': typeof VenueRoute
   '/staff': typeof AuthenticatedStaffRoute
   '/courts/$courtId': typeof CourtsCourtIdRoute
   '/teams/$teamId': typeof TeamsTeamIdRoute
@@ -136,6 +144,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/sponsors': typeof SponsorsRoute
+  '/venue': typeof VenueRoute
   '/_authenticated/staff': typeof AuthenticatedStaffRoute
   '/courts/$courtId': typeof CourtsCourtIdRoute
   '/teams/$teamId': typeof TeamsTeamIdRoute
@@ -153,6 +162,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/search'
     | '/sponsors'
+    | '/venue'
     | '/staff'
     | '/courts/$courtId'
     | '/teams/$teamId'
@@ -168,6 +178,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/search'
     | '/sponsors'
+    | '/venue'
     | '/staff'
     | '/courts/$courtId'
     | '/teams/$teamId'
@@ -184,6 +195,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/search'
     | '/sponsors'
+    | '/venue'
     | '/_authenticated/staff'
     | '/courts/$courtId'
     | '/teams/$teamId'
@@ -201,6 +213,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SearchRoute: typeof SearchRoute
   SponsorsRoute: typeof SponsorsRoute
+  VenueRoute: typeof VenueRoute
   CourtsCourtIdRoute: typeof CourtsCourtIdRoute
   TeamsTeamIdRoute: typeof TeamsTeamIdRoute
   ApiPublicAskRoute: typeof ApiPublicAskRoute
@@ -272,6 +285,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SponsorsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/venue': {
+      id: '/venue'
+      path: '/venue'
+      fullPath: '/venue'
+      preLoaderRoute: typeof VenueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/staff': {
       id: '/_authenticated/staff'
       path: '/staff'
@@ -331,6 +351,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SearchRoute: SearchRoute,
   SponsorsRoute: SponsorsRoute,
+  VenueRoute: VenueRoute,
   CourtsCourtIdRoute: CourtsCourtIdRoute,
   TeamsTeamIdRoute: TeamsTeamIdRoute,
   ApiPublicAskRoute: ApiPublicAskRoute,

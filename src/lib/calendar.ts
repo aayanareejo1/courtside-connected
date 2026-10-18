@@ -47,7 +47,7 @@ function fold(line: string): string {
 export type IcsMatch = { id: string; start_at: string; est_duration_min: number; title: string; court: string; calendarName?: string };
 
 export function toIcs(matches: readonly IcsMatch[], nowIso: string): string {
-  const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Courtside Connected//My schedule//EN", "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "X-WR-CALNAME:Courtside Connected"];
+  const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//OVAchamps//My schedule//EN", "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "X-WR-CALNAME:OVAchamps"];
   for (const m of matches) {
     const end = new Date(Date.parse(m.start_at) + m.est_duration_min * 60_000).toISOString();
     const leave = recommendedArrivalTime(m.start_at).toISOString();

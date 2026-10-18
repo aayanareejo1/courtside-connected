@@ -1,4 +1,4 @@
-// Ask Courtside chat. Questions go only to POST /api/public/ask and live in component state for this visit.
+// Ask OVAchamps chat. Questions go only to POST /api/public/ask and live in component state for this visit.
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { ExternalLink, MessageCircle, Send } from "lucide-react";
 import { ASK_INTRO, ASK_SUGGESTIONS, MAX_HISTORY, MAX_QUESTION } from "@/lib/ask-courtside";
@@ -13,7 +13,7 @@ export const MAX_EXCHANGES = 5;
 export function errorMessage(status: number): string {
   if (status === 429) return "Please wait a minute and try again.";
   if (status === 400) return "Please ask a shorter question (300 characters or fewer).";
-  if (status === 503) return "Ask Courtside is busy right now. Please try again shortly.";
+  if (status === 503) return "Ask OVAchamps is busy right now. Please try again shortly.";
   return "Something went wrong. Please check your connection and try again.";
 }
 
@@ -21,6 +21,7 @@ const isSafe = (url: string) => /^https?:\/\//i.test(url);
 
 // Turns [label](https://…) into real links; everything else stays plain text.
 export function renderAnswer(text: string): ReactNode[] {
+  text = text.replace(/\u2014/g, "-");
   const out: ReactNode[] = [];
   const re = /\[([^\]]+)\]\(([^)\s]+)\)/g;
   let last = 0; let m: RegExpExecArray | null; let i = 0;
@@ -72,8 +73,8 @@ export function AskCourtside({ initialQuestion, trigger }: { initialQuestion?: s
     <ol aria-label="Conversation" aria-live="polite" className="space-y-4">{items.map((x) => <li key={x.id} className="space-y-2">
       <p className="ml-auto w-fit max-w-[85%] rounded-lg bg-primary px-3 py-2 text-primary-foreground"><span className="sr-only">You asked: </span>{x.question}</p>
       {x.error ? <p role="alert" className="rounded-lg border border-destructive bg-card px-3 py-2 text-destructive">{x.error}</p>
-        : x.answer === undefined ? <p role="status" className="flex w-fit items-center gap-1 rounded-lg bg-card px-3 py-3" aria-label="Ask Courtside is typing"><span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground" /><span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground [animation-delay:150ms]" /><span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground [animation-delay:300ms]" /></p>
-        : <div className="space-y-2 rounded-lg border bg-card px-3 py-2"><p className="whitespace-pre-line"><span className="sr-only">Ask Courtside answered: </span>{renderAnswer(x.answer)}</p>
+        : x.answer === undefined ? <p role="status" className="flex w-fit items-center gap-1 rounded-lg bg-card px-3 py-3" aria-label="Ask OVAchamps is typing"><span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground" /><span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground [animation-delay:150ms]" /><span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground [animation-delay:300ms]" /></p>
+        : <div className="space-y-2 rounded-lg border bg-card px-3 py-2"><p className="whitespace-pre-line"><span className="sr-only">Ask OVAchamps answered: </span>{renderAnswer(x.answer)}</p>
           {x.mode === "basic" && <p className="text-xs font-semibold uppercase text-muted-foreground">Basic answer</p>}
           {x.links && x.links.length > 0 && <ul className="space-y-2">{x.links.map((l) => <li key={l.url}><Button asChild variant="secondary" className="h-auto min-h-12 w-full justify-between whitespace-normal"><a href={l.url} target="_blank" rel="noopener noreferrer">{l.title}<ExternalLink className="h-4 w-4 shrink-0" aria-hidden /><span className="sr-only"> (opens in a new tab)</span></a></Button></li>)}</ul>}
         </div>}
