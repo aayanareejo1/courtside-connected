@@ -33,3 +33,4 @@
 
 - Calendar presentation reuses columns from buildCalendar conflict IDs and offers an in-memory agenda/day toggle; no screen recomputes leave times, ends or conflicts. Why: crowded schedules stay readable without altering event rules.
 - The Venue route owns the full venue guide, directions, parking and food; Home and Info link there, while courts keep a highlighted location preview. Why: venue information has one discoverable destination without losing court context.
+- The assistant panel keeps the composer outside its scrollable transcript and retains exchanges only in mounted component state; voice is a separately hosted secure integration, not browser speech simulation. Why: fans can reach the input during long replies without losing privacy or mistaking dictation for a real call.
