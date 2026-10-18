@@ -7,6 +7,7 @@ import { SourceBadges } from "@/components/SourceBadges";
 import { ArrowLeft } from "lucide-react";
 import { eventDataQuery, teamStaffQuery } from "@/lib/event-data";
 import { FollowButton } from "@/components/FollowButton";
+import { ShareButton } from "@/components/ShareButton";
 import { playerName } from "@/lib/search";
 import { t } from "@/lib/i18n";
 
@@ -53,7 +54,7 @@ function TeamPage() {
   })}</ul>;
   return <div className="space-y-6">
     <Link to="/search" search={{ q: "" }} className="tap inline-flex items-center gap-2 text-sm text-muted-foreground"><ArrowLeft className="h-4 w-4" aria-hidden />{t.team.back}</Link>
-    <header className="space-y-3"><p className="text-sm text-muted-foreground">{club?.name} · {team.divisions.name}</p><h1 className="break-words text-4xl font-bold uppercase leading-tight">{team.name}</h1><FollowButton item={{ type: "team", id: team.id }} name={team.name} /></header>
+    <header className="space-y-3"><p className="text-sm text-muted-foreground">{club?.name} · {team.divisions.name}</p><h1 className="break-words text-4xl font-bold uppercase leading-tight">{team.name}</h1><div className="flex flex-wrap items-center gap-2"><FollowButton item={{ type: "team", id: team.id }} name={team.name} /><ShareButton title={team.name} text={`${team.name}: schedule, results and roster`} path={`/teams/${team.id}`} /></div></header>
     <TargetedAnnouncements divisionIds={[team.division_id]} />
     <SourceBadges matches={matches} sources={data.sources} savedAt={data.offlineSavedAt} />
     <section><h2 className="text-2xl font-bold uppercase">{t.team.schedule}</h2>{schedule.length ? renderMatches(schedule) : <p className="mt-2 text-muted-foreground">{t.team.noMatches}</p>}</section>

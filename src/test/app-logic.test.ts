@@ -70,7 +70,12 @@ describe("Ask Courtside", () => {
   it("validates requests and reads ticket quantities", () => {
     expect(parseAskRequest({ question: "" })).toBeNull();
     expect(parseAskRequest({ question: "x".repeat(301) })).toBeNull();
-    expect(parseAskRequest({ question: " Where? ", follows: [{ type: "team", id: "t" }, { type: "bad", id: "z" }], now: 5 })).toEqual({ question: "Where?", follows: [{ type: "team", id: "t" }], now: 5 });
+    expect(parseAskRequest({ question: " Where? ", follows: [{ type: "team", id: "t" }, { type: "bad", id: "z" }], now: 5 })).toEqual({ question: "Where?", follows: [{ type: "team", id: "t" }], now: 5, history: [] });
+    const long = Array.from({ length: 5 }, (_, n) => ({ question: `q${n}`, answer: "a".repeat(2000) }));
+    const parsed = parseAskRequest({ question: "more", history: [...long, { question: "", answer: "x" }, "bad"] })!;
+    expect(parsed.history).toHaveLength(3);
+    expect(parsed.history[0]!.question).toBe("q2");
+    expect(parsed.history[0]!.answer).toHaveLength(1000);
     expect([parseQuantity("buy 3 tickets"), parseQuantity("two tickets please"), parseQuantity("tickets"), parseQuantity("99 tickets")]).toEqual([3, 2, null, null]);
   });
   it("finds a player from 'aayan.A' and shows team, division, club and the next match with court and hall", () => {
@@ -82,6 +87,44 @@ describe("Ask Courtside", () => {
     expect(f.matchLines[0]).toContain("Court 5, Hall 1");
     expect(f.matchLines[0]).toContain("Sample data, not live");
     expect(f.matchLines[0]).toContain("be at the court by 12:45");
+  });
+  it("gives a full profile for a name: team, division, club, coach, record and every match", () => {
+    const rich = { ...data, staff: [{ team_id: "T1", display_name: "Sam Lee", role: "Head coach" }], matches: [{ ...m("done", "2026-04-19T15:00:00Z", "5", "T1", "X", "final"), results: { home_sets: 2, away_sets: 1 } }, ...data.matches] };
+    const out = fallbackAnswer(buildFacts(rich, content, req("my name is aayan"), t0));
+    expect(out.answer).toContain("Aayan A. (#16), Lakeshore Storm 13U, 13U Girls");
+    expect(out.answer).toContain("Sam Lee (Head coach)");
+    expect(out.answer).toContain("Record so far: 1 win, 0 losses.");
+    expect(out.answer).toContain("won 2-1 in sets");
+    expect(out.answer).toContain("Court 5, Hall 1, be at the court by 12:45");
+    expect(out.answer).toContain("Apr 20");
+    expect(out.answer).toContain("Venue: Enercare Centre, 100 Princes Blvd");
+    expect(out.answer).toContain("Sample data, not live");
+    expect(out.links[0]!.url).toContain("google.com/maps/dir");
+  });
+  it("still lists every match when all of them are in the past relative to the clock", () => {
+    const f = buildFacts(data, content, req("aayan A"), Date.parse("2026-10-18T16:00:00Z"));
+    expect(fallbackAnswer(f).answer).toContain("Apr 19");
+    expect(fallbackAnswer(f).answer).toContain("Apr 20");
+  });
+  it("keeps who the fan means across follow up questions", () => {
+    const history = [{ question: "Aayan A", answer: "Aayan A. plays for Lakeshore Storm 13U." }];
+    const out = fallbackAnswer(buildFacts(data, content, { ...req("give me more info"), history }, t0)).answer;
+    expect(out).toContain("Aayan A. (#16)");
+    const mine = fallbackAnswer(buildFacts(data, content, { ...req("where am i gonna play"), history }, t0)).answer;
+    expect(mine).toContain("Court 5, Hall 1");
+    const sponsor = fallbackAnswer(buildFacts(data, content, { ...req("how do I become a sponsor"), history }, t0)).answer;
+    expect(sponsor).toContain("Kerish Maharaj");
+    expect(sponsor).not.toContain("Aayan");
+    const tickets = buildFacts(data, content, { ...req("where can I buy 3 tickets for tomorrow"), history }, t0);
+    expect(tickets.profiles).toEqual([]);
+  });
+  it("asks who the fan is when nobody is known, and for the last initial when names are shared", () => {
+    const none = fallbackAnswer(buildFacts(data, content, req("where am i gonna play"), t0)).answer;
+    expect(none).toContain("first name and last initial");
+    const twins = { ...data, players: [...data.players, { id: "p3", team_id: "X", display_name: "Aayan K.", jersey_number: 4 }] };
+    const out = fallbackAnswer(buildFacts(twins, content, req("aayan"), t0)).answer;
+    expect(out).toContain("Several players match");
+    expect(out).toContain("Aayan K.");
   });
   it("fills the ticket quantity into the staff managed tickets link", () => {
     const f = buildFacts(data, content, req("where can I buy 3 tickets for tomorrow"), t0);

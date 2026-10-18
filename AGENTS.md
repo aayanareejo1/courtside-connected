@@ -26,3 +26,7 @@
 - Home summarizes canonical current/next matches with device follows and honest list-level provenance; shared match time/score elements expose team-aware scores and Toronto dates to assistive technology. Why: the phone overview and screen-reader detail stay consistent without inventing live activity.
 
 - Shared dark appearance, motion, navigation and control styling live in the global semantic tokens, AppShell and UI Button; screens consume those roles rather than fixed colors. Why: every participant and staff screen stays consistent as branding changes.
+
+- Ask Courtside receives the last three exchanges and resolves "my", "me" and follow ups to the player or team named earlier (never for sponsor, hotel, merchandise, 50/50 or directions questions); a named player or team always gets a full profile (team, division, club, coaches, record, every match with court, hall and arrival time). Why: a fan can talk to it naturally and still get one complete answer.
+- Venue directions come from one pure helper (Google Maps and Apple Maps links built from the venue name and address); the team page shares through the phone share sheet or copies the link. Why: no map or share vendor needed.
+

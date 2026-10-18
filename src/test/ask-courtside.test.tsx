@@ -30,7 +30,7 @@ describe("Ask Courtside screen", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toBe("/api/public/ask");
-    expect(JSON.parse(init.body as string)).toEqual({ question: "Where is court 5?", follows: [{ type: "team", id: "T1" }], now: 1234 });
+    expect(JSON.parse(init.body as string)).toEqual({ question: "Where is court 5?", follows: [{ type: "team", id: "T1" }], now: 1234, history: [] });
     expect(localStorage.length).toBe(1);
   });
 
