@@ -20,3 +20,5 @@
 - Event data is cached on the device (one namespaced key) and served with its save time when loading fails; a banner says when saved data is shown. Why: schedules stay readable on weak venue Wi-Fi without a service worker.
 - Match lists share pure source-notice rules and one badge component, attributed by canonical match source_id; missing attribution is conservative and device fallback overrides live provenance. Why: every screen stays honest without per-row badge noise.
 - Court match reads reuse the event-directory device cache and canonical teams. Why: last-known court schedules survive cold offline navigation.
+
+- Court schedules use a pure time-aware selector for current-or-next plus three later matches; map markers require finite in-range coordinates and court navigation stays available as a numbered list. Why: missing positions never break schedule discovery on phones.
