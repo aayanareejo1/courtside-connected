@@ -1,7 +1,7 @@
 // Ask Courtside chat. Questions go only to POST /api/public/ask and live in component state for this visit.
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { ExternalLink, MessageCircle, Send } from "lucide-react";
-import { ASK_INTRO, ASK_SUGGESTIONS, MAX_QUESTION } from "@/lib/ask-courtside";
+import { ASK_INTRO, ASK_SUGGESTIONS, MAX_HISTORY, MAX_QUESTION } from "@/lib/ask-courtside";
 import { useFollows } from "@/lib/follows";
 import { appNow } from "@/lib/clock";
 import { Button } from "@/components/ui/button";
@@ -40,17 +40,21 @@ export function AskCourtside({ initialQuestion, trigger }: { initialQuestion?: s
   const [items, setItems] = useState<Exchange[]>([]);
   const [busy, setBusy] = useState(false);
   const nextId = useRef(1);
+  const itemsRef = useRef<Exchange[]>([]);
+  itemsRef.current = items;
   const asked = useRef(false);
 
   async function ask(raw: string) {
     const question = raw.trim().slice(0, MAX_QUESTION);
     if (!question || busy) return;
+    // The last answered exchanges go along so a follow up knows who it is about.
+    const history = itemsRef.current.filter((x) => x.answer).slice(-MAX_HISTORY).map((x) => ({ question: x.question, answer: x.answer! }));
     const id = nextId.current++;
     setItems((list) => [...list, { id, question }].slice(-MAX_EXCHANGES));
     setText(""); setBusy(true);
     let patch: Partial<Exchange>;
     try {
-      const res = await fetch("/api/public/ask", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ question, follows, now: appNow() }) });
+      const res = await fetch("/api/public/ask", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ question, follows, now: appNow(), history }) });
       const body = (await res.json().catch(() => ({}))) as { answer?: string; links?: AskLinkOut[]; mode?: "ai" | "basic"; error?: string };
       patch = res.ok && typeof body.answer === "string" ? { answer: body.answer, links: (body.links ?? []).filter((l) => isSafe(l.url)), mode: body.mode === "basic" ? "basic" : "ai" } : { error: errorMessage(res.status) };
     } catch { patch = { error: errorMessage(0) }; }

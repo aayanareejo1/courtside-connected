@@ -21,3 +21,10 @@ export function targetedAnnouncements<T extends Targeted>(rows: T[], target: { d
   const a = new Set((target.areaIds ?? []).filter(Boolean));
   return rows.filter((r) => (r.division_id && d.has(r.division_id)) || (r.area_id && a.has(r.area_id)));
 }
+
+// Turn by turn directions to a venue. Both open on any phone: Apple Maps on iPhone, Google Maps everywhere.
+export function directionsUrl(app: "google" | "apple", venue: string | null | undefined, address: string | null | undefined): string | undefined {
+  const place = [venue, address].filter((x): x is string => typeof x === "string" && x.trim().length > 0).join(", ");
+  if (!place) return undefined;
+  return app === "google" ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(place)}` : `https://maps.apple.com/?daddr=${encodeURIComponent(place)}`;
+}

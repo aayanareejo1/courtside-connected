@@ -20,14 +20,19 @@ export const Route = createFileRoute("/api/public/ask")({
         try {
           const { readEventData } = await import("@/lib/event-data");
           const { readEventContent } = await import("@/lib/event-content");
-          const [data, content] = await Promise.all([readEventData(), readEventContent()]);
-          const facts = buildFacts(data, content, body, body.now ?? Date.now());
+          const { supabase } = await import("@/integrations/supabase/client");
+          const [data, content, staff] = await Promise.all([
+            readEventData(), readEventContent(),
+            // Coaches are public on the team page. If this read fails the answer simply leaves them out.
+            Promise.resolve(supabase.from("staff_members").select("team_id,display_name,role").limit(2000)).then((r) => r.data ?? []).catch(() => []),
+          ]);
+          const facts = buildFacts({ ...data, staff }, content, body, body.now ?? Date.now());
           const key = process.env["ANTHROPIC_API_KEY"];
           if (!key) return Response.json({ ...fallbackAnswer(facts), mode: "basic" });
           const ask = () => fetch("https://api.anthropic.com/v1/messages", {
             method: "POST",
             headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
-            body: JSON.stringify({ model: "claude-haiku-5-5", max_tokens: 700, system: SYSTEM_PROMPT, messages: [{ role: "user", content: `FACTS\n${facts.text}\nEND FACTS\n\nFan question: ${body.question}` }] }),
+            body: JSON.stringify({ model: "claude-haiku-5-5", max_tokens: 900, system: SYSTEM_PROMPT, messages: [...body.history.flatMap((h) => [{ role: "user", content: h.question }, { role: "assistant", content: h.answer }]), { role: "user", content: `FACTS\n${facts.text}\nEND FACTS\n\nFan question: ${body.question}` }] }),
             signal: AbortSignal.timeout(12_000),
           });
           let reason = "";
