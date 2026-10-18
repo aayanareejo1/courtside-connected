@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { MessageCircle, X } from "lucide-react";
 import { AskCourtside } from "@/components/AskCourtside";
 import { AssistantMark } from "@/components/AssistantMark";
+import { VoiceCall, useVoiceAvailable } from "@/components/VoiceCall";
 
 const EVENT = "courtside:ask";
 // Anything in the app can open the chat, optionally with a question: openAsk("Where is court 9?").
@@ -12,6 +13,7 @@ export const openAsk = (q = "") => window.dispatchEvent(new CustomEvent(EVENT, {
 
 export function AskWidget() {
   const [mounted, setMounted] = useState(false);
+  const voice = useVoiceAvailable();
   const [open, setOpen] = useState(false);
   const [trigger, setTrigger] = useState<{ q: string; n: number } | undefined>();
   const panel = useRef<HTMLDivElement>(null);
@@ -43,6 +45,7 @@ export function AskWidget() {
         <div className="flex min-w-0 items-center gap-3"><AssistantMark small /><div className="min-w-0"><h2 className="truncate text-base font-semibold">Ask OVAchamps</h2><p className="text-xs text-muted-foreground">Your event companion</p></div></div>
         <Button type="button" variant="ghost" size="icon" onClick={() => { setOpen(false); button.current?.focus(); }} aria-label="Close Ask OVAchamps" className="h-11 w-11 shrink-0"><X className="h-5 w-5" aria-hidden /></Button>
       </div>
+      {voice && open && <VoiceCall />}
       <AskCourtside trigger={trigger} />
     </div>, document.body)}
     <Button ref={button} type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-controls="ask-panel"
