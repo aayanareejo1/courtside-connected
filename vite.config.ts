@@ -6,6 +6,7 @@ import tsConfigPaths from "vite-tsconfig-paths";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact from "@vitejs/plugin-react";
 import { nitro } from "nitro/vite";
+import { liveVoiceDev } from "./live-vite-plugin";
 
 export default defineConfig(({ command, mode }) => {
   // Expose VITE_* variables to the browser bundle at build time.
@@ -31,6 +32,7 @@ export default defineConfig(({ command, mode }) => {
       // Cloudflare Workers output; override with NITRO_PRESET for another host.
       ...(command === "build" ? [nitro({ preset: process.env["NITRO_PRESET"] || "cloudflare-module", cloudflare: { nodeCompat: true, deployConfig: true, wrangler: { name: "courtside-connected", observability: { logs: { enabled: true } } } } })] : []),
       viteReact(),
+      liveVoiceDev(),
     ],
   };
 });

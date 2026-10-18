@@ -1,6 +1,6 @@
 # OVAchamps voice calls - next integration
 
-Status: researched, not enabled. No simulated call button is shown to fans.
+Status: built. The "Talk to OVAchamps" button appears in the chat once LOVABLE_API_KEY is set as a server secret on the deployed app.
 
 ## Hosting prerequisite
 

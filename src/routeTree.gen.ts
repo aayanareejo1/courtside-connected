@@ -23,6 +23,7 @@ import { Route as AuthenticatedStaffRouteImport } from './routes/_authenticated/
 import { Route as CourtsCourtIdRouteImport } from './routes/courts.$courtId'
 import { Route as TeamsTeamIdRouteImport } from './routes/teams.$teamId'
 import { Route as ApiPublicAskRouteImport } from './routes/api/public/ask'
+import { Route as ApiPublicVoiceStatusRouteImport } from './routes/api/public/voice-status'
 import { Route as ApiPublicJobsSyncSourcesRouteImport } from './routes/api/public/jobs/sync-sources'
 
 const IndexRoute = IndexRouteImport.update({
@@ -94,6 +95,11 @@ const ApiPublicAskRoute = ApiPublicAskRouteImport.update({
   path: '/api/public/ask',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicVoiceStatusRoute = ApiPublicVoiceStatusRouteImport.update({
+  id: '/api/public/voice-status',
+  path: '/api/public/voice-status',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicJobsSyncSourcesRoute =
   ApiPublicJobsSyncSourcesRouteImport.update({
     id: '/api/public/jobs/sync-sources',
@@ -115,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/courts/$courtId': typeof CourtsCourtIdRoute
   '/teams/$teamId': typeof TeamsTeamIdRoute
   '/api/public/ask': typeof ApiPublicAskRoute
+  '/api/public/voice-status': typeof ApiPublicVoiceStatusRoute
   '/api/public/jobs/sync-sources': typeof ApiPublicJobsSyncSourcesRoute
 }
 export interface FileRoutesByTo {
@@ -131,6 +138,7 @@ export interface FileRoutesByTo {
   '/courts/$courtId': typeof CourtsCourtIdRoute
   '/teams/$teamId': typeof TeamsTeamIdRoute
   '/api/public/ask': typeof ApiPublicAskRoute
+  '/api/public/voice-status': typeof ApiPublicVoiceStatusRoute
   '/api/public/jobs/sync-sources': typeof ApiPublicJobsSyncSourcesRoute
 }
 export interface FileRoutesById {
@@ -149,6 +157,7 @@ export interface FileRoutesById {
   '/courts/$courtId': typeof CourtsCourtIdRoute
   '/teams/$teamId': typeof TeamsTeamIdRoute
   '/api/public/ask': typeof ApiPublicAskRoute
+  '/api/public/voice-status': typeof ApiPublicVoiceStatusRoute
   '/api/public/jobs/sync-sources': typeof ApiPublicJobsSyncSourcesRoute
 }
 export interface FileRouteTypes {
@@ -167,6 +176,7 @@ export interface FileRouteTypes {
     | '/courts/$courtId'
     | '/teams/$teamId'
     | '/api/public/ask'
+    | '/api/public/voice-status'
     | '/api/public/jobs/sync-sources'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -183,6 +193,7 @@ export interface FileRouteTypes {
     | '/courts/$courtId'
     | '/teams/$teamId'
     | '/api/public/ask'
+    | '/api/public/voice-status'
     | '/api/public/jobs/sync-sources'
   id:
     | '__root__'
@@ -200,6 +211,7 @@ export interface FileRouteTypes {
     | '/courts/$courtId'
     | '/teams/$teamId'
     | '/api/public/ask'
+    | '/api/public/voice-status'
     | '/api/public/jobs/sync-sources'
   fileRoutesById: FileRoutesById
 }
@@ -217,6 +229,7 @@ export interface RootRouteChildren {
   CourtsCourtIdRoute: typeof CourtsCourtIdRoute
   TeamsTeamIdRoute: typeof TeamsTeamIdRoute
   ApiPublicAskRoute: typeof ApiPublicAskRoute
+  ApiPublicVoiceStatusRoute: typeof ApiPublicVoiceStatusRoute
   ApiPublicJobsSyncSourcesRoute: typeof ApiPublicJobsSyncSourcesRoute
 }
 
@@ -320,6 +333,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicAskRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/voice-status': {
+      id: '/api/public/voice-status'
+      path: '/api/public/voice-status'
+      fullPath: '/api/public/voice-status'
+      preLoaderRoute: typeof ApiPublicVoiceStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/jobs/sync-sources': {
       id: '/api/public/jobs/sync-sources'
       path: '/api/public/jobs/sync-sources'
@@ -355,6 +375,7 @@ const rootRouteChildren: RootRouteChildren = {
   CourtsCourtIdRoute: CourtsCourtIdRoute,
   TeamsTeamIdRoute: TeamsTeamIdRoute,
   ApiPublicAskRoute: ApiPublicAskRoute,
+  ApiPublicVoiceStatusRoute: ApiPublicVoiceStatusRoute,
   ApiPublicJobsSyncSourcesRoute: ApiPublicJobsSyncSourcesRoute,
 }
 export const routeTree = rootRouteImport

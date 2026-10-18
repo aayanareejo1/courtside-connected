@@ -22,12 +22,12 @@ describe("floating Ask Courtside chat", () => {
     expect(document.getElementById("ask-panel")!.hidden).toBe(true);
   });
   it("opens and sends a question when something in the app calls openAsk", async () => {
-    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ answer: "Court 9, Hall 1", links: [], mode: "ai" }), { status: 200 }));
+    const fetchMock = vi.fn(async (_url?: unknown) => new Response(JSON.stringify({ answer: "Court 9, Hall 1", links: [], mode: "ai" }), { status: 200 }));
     vi.stubGlobal("fetch", fetchMock);
     render(<AskWidget />);
     act(() => openAsk("Where is court 9?"));
     expect(document.getElementById("ask-panel")!.hidden).toBe(false);
     await screen.findByText("Court 9, Hall 1");
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(fetchMock.mock.calls.filter((c: unknown[]) => String(c[0]).includes("/api/public/ask"))).toHaveLength(1));
   });
 });
