@@ -24,22 +24,28 @@ export const Route = createFileRoute("/api/public/ask")({
           const facts = buildFacts(data, content, body, body.now ?? Date.now());
           const key = process.env["ANTHROPIC_API_KEY"];
           if (!key) return Response.json({ ...fallbackAnswer(facts), mode: "basic" });
-          try {
-            const res = await fetch("https://api.anthropic.com/v1/messages", {
-              method: "POST",
-              headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
-              body: JSON.stringify({ model: "claude-haiku-5-5", max_tokens: 400, system: SYSTEM_PROMPT, messages: [{ role: "user", content: `FACTS\n${facts.text}\nEND FACTS\n\nFan question: ${body.question}` }] }),
-              signal: AbortSignal.timeout(12_000),
-            });
-            if (!res.ok) throw new Error(`model ${res.status}`);
-            const out = (await res.json()) as { content?: { type: string; text?: string }[] };
-            const text = out.content?.find((c) => c.type === "text")?.text?.trim();
-            if (!text) throw new Error("empty answer");
-            return Response.json({ ...sanitizeAnswer(text, facts.links), mode: "ai" });
-          } catch (e) {
-            console.error("Ask Courtside model failed", e);
-            return Response.json({ ...fallbackAnswer(facts), mode: "basic" });
+          const ask = () => fetch("https://api.anthropic.com/v1/messages", {
+            method: "POST",
+            headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
+            body: JSON.stringify({ model: "claude-haiku-5-5", max_tokens: 400, system: SYSTEM_PROMPT, messages: [{ role: "user", content: `FACTS\n${facts.text}\nEND FACTS\n\nFan question: ${body.question}` }] }),
+            signal: AbortSignal.timeout(12_000),
+          });
+          let reason = "";
+          for (let attempt = 0; attempt < 2; attempt++) {
+            try {
+              const res = await ask();
+              if (res.status === 429 || res.status >= 500) { reason = `model_${res.status}`; continue; } // one retry
+              if (!res.ok) { reason = `model_${res.status}`; break; }
+              const out = (await res.json()) as { content?: { type: string; text?: string }[] };
+              const text = out.content?.find((c) => c.type === "text")?.text?.trim();
+              if (!text) { reason = "empty_answer"; break; }
+              return Response.json({ ...sanitizeAnswer(text, facts.links), mode: "ai" });
+            } catch (e) {
+              reason = e instanceof Error && e.name === "TimeoutError" ? "timeout" : "network";
+            }
           }
+          console.error("Ask Courtside model failed", reason);
+          return Response.json({ ...fallbackAnswer(facts), mode: "basic", reason });
         } catch (e) {
           console.error("Ask Courtside data failed", e);
           return Response.json({ error: "Event data is unavailable right now." }, { status: 503 });

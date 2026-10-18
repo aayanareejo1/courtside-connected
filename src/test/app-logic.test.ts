@@ -92,6 +92,18 @@ describe("Ask Courtside", () => {
     expect(out.answer).toContain("For 3 tickets");
     expect(out.links[0]!.url).toContain("qty=3");
   });
+  it("shows the next unfinished match, not a finished one, and no clash flags without follows", () => {
+    const d = { ...data, matches: [m("done", "2026-04-19T15:00:00Z", "5", "T1", "X", "final"), data.matches[0]!] };
+    const f = buildFacts(d, content, req("where is aayan.A playing"), t0);
+    const out = fallbackAnswer(f).answer;
+    expect(out).toContain("1:00 p.m.");
+    expect(out).not.toContain("CLASH");
+  });
+  it("lists tomorrow's games when asked about tomorrow", () => {
+    const out = fallbackAnswer(buildFacts(data, content, req("buy 3 tickets for tomorrow"), t0)).answer;
+    expect(out).toContain("Games tomorrow");
+    expect(out).toContain("Apr 20");
+  });
   it("answers sponsor questions with the sponsor page and contact", () => {
     const out = fallbackAnswer(buildFacts(data, content, req("how do I become a sponsor"), t0));
     expect(out.answer).toContain("Kerish Maharaj");
