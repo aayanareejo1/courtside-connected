@@ -1,0 +1,87 @@
+// Ask Courtside chat. Questions go only to POST /api/public/ask and live in component state for this visit.
+import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
+import { ExternalLink, MessageCircle, Send } from "lucide-react";
+import { ASK_INTRO, ASK_SUGGESTIONS, MAX_QUESTION } from "@/lib/ask-courtside";
+import { useFollows } from "@/lib/follows";
+import { appNow } from "@/lib/clock";
+import { Button } from "@/components/ui/button";
+
+export type AskLinkOut = { title: string; url: string };
+export type Exchange = { id: number; question: string; answer?: string; links?: AskLinkOut[]; mode?: "ai" | "basic"; error?: string };
+export const MAX_EXCHANGES = 5;
+
+export function errorMessage(status: number): string {
+  if (status === 429) return "Please wait a minute and try again.";
+  if (status === 400) return "Please ask a shorter question (300 characters or fewer).";
+  if (status === 503) return "Ask Courtside is busy right now. Please try again shortly.";
+  return "Something went wrong. Please check your connection and try again.";
+}
+
+const isSafe = (url: string) => /^https?:\/\//i.test(url);
+
+// Turns [label](https://…) into real links; everything else stays plain text.
+export function renderAnswer(text: string): ReactNode[] {
+  const out: ReactNode[] = [];
+  const re = /\[([^\]]+)\]\(([^)\s]+)\)/g;
+  let last = 0; let m: RegExpExecArray | null; let i = 0;
+  while ((m = re.exec(text))) {
+    if (m.index > last) out.push(<Fragment key={i++}>{text.slice(last, m.index)}</Fragment>);
+    const [, label, url] = m;
+    out.push(isSafe(url!) ? <a key={i++} href={url} target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline underline-offset-4">{label}<span className="sr-only"> (opens in a new tab)</span></a> : <Fragment key={i++}>{label}</Fragment>);
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) out.push(<Fragment key={i++}>{text.slice(last)}</Fragment>);
+  return out;
+}
+
+export function AskCourtside({ initialQuestion }: { initialQuestion?: string | undefined }) {
+  const { follows } = useFollows();
+  const [text, setText] = useState("");
+  const [items, setItems] = useState<Exchange[]>([]);
+  const [busy, setBusy] = useState(false);
+  const nextId = useRef(1);
+  const asked = useRef(false);
+
+  async function ask(raw: string) {
+    const question = raw.trim().slice(0, MAX_QUESTION);
+    if (!question || busy) return;
+    const id = nextId.current++;
+    setItems((list) => [...list, { id, question }].slice(-MAX_EXCHANGES));
+    setText(""); setBusy(true);
+    let patch: Partial<Exchange>;
+    try {
+      const res = await fetch("/api/public/ask", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ question, follows, now: appNow() }) });
+      const body = (await res.json().catch(() => ({}))) as { answer?: string; links?: AskLinkOut[]; mode?: "ai" | "basic"; error?: string };
+      patch = res.ok && typeof body.answer === "string" ? { answer: body.answer, links: (body.links ?? []).filter((l) => isSafe(l.url)), mode: body.mode === "basic" ? "basic" : "ai" } : { error: errorMessage(res.status) };
+    } catch { patch = { error: errorMessage(0) }; }
+    setItems((list) => list.map((x) => (x.id === id ? { ...x, ...patch } : x)));
+    setBusy(false);
+  }
+
+  useEffect(() => { if (initialQuestion && !asked.current) { asked.current = true; void ask(initialQuestion); } }, [initialQuestion]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return <div className="space-y-4">
+    <div className="flex gap-3 rounded-lg bg-secondary p-3 text-secondary-foreground"><MessageCircle className="mt-0.5 h-5 w-5 shrink-0" aria-hidden /><p>{ASK_INTRO}</p></div>
+    <ul aria-label="Suggested questions" className="flex flex-wrap gap-2">{ASK_SUGGESTIONS.map((s) =>
+      <li key={s}><Button type="button" variant="outline" className="h-auto min-h-11 whitespace-normal rounded-full text-left" disabled={busy} onClick={() => void ask(s)}>{s}</Button></li>)}</ul>
+    <ol aria-label="Conversation" aria-live="polite" className="space-y-4">{items.map((x) => <li key={x.id} className="space-y-2">
+      <p className="ml-auto w-fit max-w-[85%] rounded-lg bg-primary px-3 py-2 text-primary-foreground"><span className="sr-only">You asked: </span>{x.question}</p>
+      {x.error ? <p role="alert" className="rounded-lg border border-destructive bg-card px-3 py-2 text-destructive">{x.error}</p>
+        : x.answer === undefined ? <p role="status" className="flex w-fit items-center gap-1 rounded-lg bg-card px-3 py-3" aria-label="Ask Courtside is typing"><span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground" /><span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground [animation-delay:150ms]" /><span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground [animation-delay:300ms]" /></p>
+        : <div className="space-y-2 rounded-lg border bg-card px-3 py-2"><p className="whitespace-pre-line"><span className="sr-only">Ask Courtside answered: </span>{renderAnswer(x.answer)}</p>
+          {x.mode === "basic" && <p className="text-xs font-semibold uppercase text-muted-foreground">Basic answer</p>}
+          {x.links && x.links.length > 0 && <ul className="space-y-2">{x.links.map((l) => <li key={l.url}><Button asChild variant="secondary" className="h-auto min-h-12 w-full justify-between whitespace-normal"><a href={l.url} target="_blank" rel="noopener noreferrer">{l.title}<ExternalLink className="h-4 w-4 shrink-0" aria-hidden /><span className="sr-only"> (opens in a new tab)</span></a></Button></li>)}</ul>}
+        </div>}
+    </li>)}</ol>
+    <form className="space-y-1" onSubmit={(e) => { e.preventDefault(); void ask(text); }}>
+      <label htmlFor="ask-input" className="text-sm font-semibold">Your question</label>
+      <div className="flex gap-2">
+        <textarea id="ask-input" value={text} maxLength={MAX_QUESTION} rows={2} onChange={(e) => setText(e.target.value.slice(0, MAX_QUESTION))}
+          onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void ask(text); } }}
+          aria-describedby="ask-count" className="min-h-12 min-w-0 flex-1 resize-none rounded-lg border border-input bg-background px-3 py-2 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" placeholder="Ask about a team, a court, tickets…" />
+        <Button type="submit" size="icon" className="h-12 w-12 shrink-0" disabled={busy || !text.trim()} aria-label="Send question"><Send className="h-5 w-5" aria-hidden /></Button>
+      </div>
+      <p id="ask-count" className="text-right text-xs text-muted-foreground">{text.length}/{MAX_QUESTION}</p>
+    </form>
+  </div>;
+}
