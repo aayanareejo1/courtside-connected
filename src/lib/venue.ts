@@ -9,7 +9,7 @@ async function loadVenue() {
     const vid = ev.venue_id;
     if (!vid) throw new Error("Published event has no venue");
     const [v, a, c] = await Promise.all([
-      supabase.from("venues").select("id,name,plan_width,plan_height").eq("id", vid).single(),
+      supabase.from("venues").select("id,name,plan_width,plan_height,floor_plan_path").eq("id", vid).single(),
       supabase.from("areas").select("id,name,kind,x,y,w,h").eq("venue_id", vid),
       supabase.from("courts").select("id,label,map_x,map_y,stream_url,area_id").eq("venue_id", vid),
     ]);
@@ -41,3 +41,20 @@ export const courtMatchesQuery = (courtId: string) => queryOptions({
     }));
   },
 });
+
+// Which symbol a map area gets. Halls, warm up and meeting rooms come from areas.kind; "other" areas are told apart by name.
+export type AreaFeature = "hall" | "warmup" | "meeting" | "washroom" | "entrance" | "food" | "registration" | "other";
+export function areaFeature(kind: string, name: string): AreaFeature {
+  if (kind === "hall" || kind === "warmup" || kind === "meeting") return kind;
+  const n = name.toLowerCase();
+  if (/washroom|restroom|toilet/.test(n)) return "washroom";
+  if (/entrance|exit|door/.test(n)) return "entrance";
+  if (/food|café|cafe|snack|concession/.test(n)) return "food";
+  if (/registration|check.?in|info desk/.test(n)) return "registration";
+  return "other";
+}
+// Floor plan background: a full https URL, or a file in /public such as /floor-plan.png. Anything else is ignored.
+export function floorPlanUrl(path: string | null | undefined): string | null {
+  if (!path) return null;
+  return /^https:\/\//.test(path) || path.startsWith("/") ? path : null;
+}

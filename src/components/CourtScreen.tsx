@@ -14,7 +14,7 @@ export type CourtScreenMatch = CourtMatch & { source_id?: string | null; time_es
   results: { home_sets: number; away_sets: number } | { home_sets: number; away_sets: number }[] | null };
 
 export function CourtScreen({ court, courts, areas, venue, matches, sources, savedAt, now }: {
-  court: MapCourt; courts: MapCourt[]; areas: MapArea[]; venue: { plan_width: number; plan_height: number };
+  court: MapCourt; courts: MapCourt[]; areas: MapArea[]; venue: { plan_width: number; plan_height: number; floor_plan_path?: string | null };
   matches: CourtScreenMatch[]; sources?: MatchSource[] | undefined; savedAt?: number | null | undefined; now: number;
 }) {
   const [number, setNumber] = useState("");
@@ -42,7 +42,7 @@ export function CourtScreen({ court, courts, areas, venue, matches, sources, sav
     </header>
     <section aria-label={t.court.location}>
       <h2 className="mb-2 text-2xl font-bold uppercase">{t.court.location}{area && <span className="ml-2 text-lg text-muted-foreground">{area.name}</span>}</h2>
-      {hasMapPosition(court) ? <VenueMap key={court.id} areas={areas} courts={courts} width={venue.plan_width} height={venue.plan_height} highlightId={court.id} />
+      {hasMapPosition(court) ? <VenueMap key={court.id} areas={areas} courts={courts} width={venue.plan_width} height={venue.plan_height} floorPlan={venue.floor_plan_path} highlightId={court.id} />
         : <p className="text-sm text-muted-foreground">{t.court.noPosition}</p>}
     </section>
     {court.stream_url && <a href={court.stream_url} target="_blank" rel="noreferrer" className="tap flex items-center justify-center gap-2 rounded-lg bg-destructive p-3 font-semibold text-destructive-foreground"><Video className="h-5 w-5 shrink-0" aria-hidden />{t.court.watch}</a>}

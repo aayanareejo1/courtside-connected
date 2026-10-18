@@ -19,8 +19,8 @@ describe('Court screen outcomes',()=>{
  });
  it('highlights the selected court pin and routes number search to the matching court',()=>{
   render(<CourtScreen {...props} court={courts[0]!} />);
-  const map=screen.getByRole('group',{name:'Venue map'});
-  expect(within(map).getByRole('link',{name:'Court 5'}).getAttribute('aria-current')).toBe('page');
+  const map=screen.getByRole('group',{name:'Simplified venue guide'});
+  expect(within(map).getByRole('link',{name:'Court 5, You are viewing this court'}).getAttribute('aria-current')).toBe('page');
   expect(within(map).queryByRole('link',{name:'Court 9'})).toBeNull();
   fireEvent.change(screen.getByRole('searchbox'),{target:{value:'09'}});
   const nav=screen.getByRole('navigation',{name:'Courts list'});
