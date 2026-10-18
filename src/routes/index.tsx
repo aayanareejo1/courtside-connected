@@ -14,6 +14,7 @@ import { SponsorCard } from "@/components/SponsorCard";
 import { Gift, Search, MapPin } from "lucide-react";
 import { RegisterButton } from "@/components/RegisterButton";
 import { Button } from "@/components/ui/button";
+import { AskCard } from "@/components/AskCard";
 
 function HomeMap() {
   const { data } = useSuspenseQuery(venueQuery);
@@ -66,6 +67,7 @@ function Home() {
         <Button asChild className="h-auto min-h-12 whitespace-normal"><Link to="/search" search={{ q: "" }}><Search className="shrink-0" aria-hidden />{t.home.findPeople}</Link></Button>
         <Button asChild variant="outline" className="h-auto min-h-12 whitespace-normal"><Link to="/info"><MapPin className="shrink-0" aria-hidden />{t.home.findPlaces}</Link></Button>
       </div>
+      <AskCard />
       <RegisterButton url={event.registration_url} live={event.registration_live} />
       {(() => { const all = generalAnnouncements(data.announcements); const recent = new Set([...all].sort((a, b) => Date.parse(b.created_at ?? "") - Date.parse(a.created_at ?? "")).slice(0, 3).map((a) => a.id)); const shown = all.filter((a) => recent.has(a.id)); return shown.length ? <div><AnnouncementBanner announcements={shown} />{all.length > 3 && <Link to="/announcements" className="tap inline-flex min-h-11 items-center text-sm font-semibold text-primary underline-offset-4 hover:underline">{t.announcements.seeAll}</Link>}</div> : null; })()}
       <HomeMap />
