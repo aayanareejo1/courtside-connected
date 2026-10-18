@@ -1,3 +1,4 @@
+import { appNow } from "@/lib/clock";
 import { useEffect, useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import { SourceBadges } from '@/components/SourceBadges';
@@ -11,7 +12,7 @@ import { t } from '@/lib/i18n';
 export function HomeOverview({ data }: { data: EventData }) {
   const { follows } = useFollows();
   const [now, setNow] = useState(0);
-  useEffect(() => { setNow(Date.now()); const timer = setInterval(() => setNow(Date.now()), 30_000); return () => clearInterval(timer); }, []);
+  useEffect(() => { setNow(appNow()); const timer = setInterval(() => setNow(appNow()), 30_000); return () => clearInterval(timer); }, []);
   const summary = homeSummary(data.matches, data.players, follows, data.sources, now, data.offlineSavedAt);
   const match = summary.next;
   const court = data.courts.find(c => c.id === match?.court_id);

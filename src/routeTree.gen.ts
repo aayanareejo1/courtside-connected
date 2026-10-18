@@ -20,6 +20,7 @@ import { Route as SponsorsRouteImport } from './routes/sponsors'
 import { Route as AuthenticatedStaffRouteImport } from './routes/_authenticated/staff'
 import { Route as CourtsCourtIdRouteImport } from './routes/courts.$courtId'
 import { Route as TeamsTeamIdRouteImport } from './routes/teams.$teamId'
+import { Route as ApiPublicAskRouteImport } from './routes/api/public/ask'
 import { Route as ApiPublicJobsSyncSourcesRouteImport } from './routes/api/public/jobs/sync-sources'
 
 const IndexRoute = IndexRouteImport.update({
@@ -76,6 +77,11 @@ const TeamsTeamIdRoute = TeamsTeamIdRouteImport.update({
   path: '/teams/$teamId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicAskRoute = ApiPublicAskRouteImport.update({
+  id: '/api/public/ask',
+  path: '/api/public/ask',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicJobsSyncSourcesRoute =
   ApiPublicJobsSyncSourcesRouteImport.update({
     id: '/api/public/jobs/sync-sources',
@@ -94,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/staff': typeof AuthenticatedStaffRoute
   '/courts/$courtId': typeof CourtsCourtIdRoute
   '/teams/$teamId': typeof TeamsTeamIdRoute
+  '/api/public/ask': typeof ApiPublicAskRoute
   '/api/public/jobs/sync-sources': typeof ApiPublicJobsSyncSourcesRoute
 }
 export interface FileRoutesByTo {
@@ -107,6 +114,7 @@ export interface FileRoutesByTo {
   '/staff': typeof AuthenticatedStaffRoute
   '/courts/$courtId': typeof CourtsCourtIdRoute
   '/teams/$teamId': typeof TeamsTeamIdRoute
+  '/api/public/ask': typeof ApiPublicAskRoute
   '/api/public/jobs/sync-sources': typeof ApiPublicJobsSyncSourcesRoute
 }
 export interface FileRoutesById {
@@ -122,6 +130,7 @@ export interface FileRoutesById {
   '/_authenticated/staff': typeof AuthenticatedStaffRoute
   '/courts/$courtId': typeof CourtsCourtIdRoute
   '/teams/$teamId': typeof TeamsTeamIdRoute
+  '/api/public/ask': typeof ApiPublicAskRoute
   '/api/public/jobs/sync-sources': typeof ApiPublicJobsSyncSourcesRoute
 }
 export interface FileRouteTypes {
@@ -137,6 +146,7 @@ export interface FileRouteTypes {
     | '/staff'
     | '/courts/$courtId'
     | '/teams/$teamId'
+    | '/api/public/ask'
     | '/api/public/jobs/sync-sources'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -150,6 +160,7 @@ export interface FileRouteTypes {
     | '/staff'
     | '/courts/$courtId'
     | '/teams/$teamId'
+    | '/api/public/ask'
     | '/api/public/jobs/sync-sources'
   id:
     | '__root__'
@@ -164,6 +175,7 @@ export interface FileRouteTypes {
     | '/_authenticated/staff'
     | '/courts/$courtId'
     | '/teams/$teamId'
+    | '/api/public/ask'
     | '/api/public/jobs/sync-sources'
   fileRoutesById: FileRoutesById
 }
@@ -178,6 +190,7 @@ export interface RootRouteChildren {
   SponsorsRoute: typeof SponsorsRoute
   CourtsCourtIdRoute: typeof CourtsCourtIdRoute
   TeamsTeamIdRoute: typeof TeamsTeamIdRoute
+  ApiPublicAskRoute: typeof ApiPublicAskRoute
   ApiPublicJobsSyncSourcesRoute: typeof ApiPublicJobsSyncSourcesRoute
 }
 
@@ -260,6 +273,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeamsTeamIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/ask': {
+      id: '/api/public/ask'
+      path: '/api/public/ask'
+      fullPath: '/api/public/ask'
+      preLoaderRoute: typeof ApiPublicAskRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/jobs/sync-sources': {
       id: '/api/public/jobs/sync-sources'
       path: '/api/public/jobs/sync-sources'
@@ -292,6 +312,7 @@ const rootRouteChildren: RootRouteChildren = {
   SponsorsRoute: SponsorsRoute,
   CourtsCourtIdRoute: CourtsCourtIdRoute,
   TeamsTeamIdRoute: TeamsTeamIdRoute,
+  ApiPublicAskRoute: ApiPublicAskRoute,
   ApiPublicJobsSyncSourcesRoute: ApiPublicJobsSyncSourcesRoute,
 }
 export const routeTree = rootRouteImport
